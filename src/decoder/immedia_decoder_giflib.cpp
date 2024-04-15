@@ -53,11 +53,6 @@ static int GifInputFunc(GifFileType* gif, GifByteType* buf, int len)
     return len;
 }
 
-static void* CreateContextFromFile(const char* filename)
-{
-    return GifContinuRead(DGifOpenFileName(filename, nullptr));
-}
-
 static void* CreateContextFromData(const uint8_t* data, size_t data_size)
 {
     return GifContinuRead(DGifOpen((void*)data, GifInputFunc, nullptr));
@@ -84,7 +79,7 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
         *frame_count = ctx->Gif->ImageCount == 1 ? 0 : ctx->Gif->ImageCount;
 }
 
-static bool ReadFrame(void* context, uint8_t** pixels, int* delay)
+static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
     GiflibDecoderContext* ctx = reinterpret_cast<GiflibDecoderContext*>(context);
     
@@ -118,10 +113,8 @@ static bool ReadFrame(void* context, uint8_t** pixels, int* delay)
         }
     }
 
-    if (pixels)
-        *pixels = ctx->FrameBuffer;
-    if (delay)
-        *delay = graphic_block.DelayTime * 10;
+    *pixels = ctx->FrameBuffer;
+    *delay_in_ms = graphic_block.DelayTime * 10;
 
     ctx->CurrentFrame = (ctx->CurrentFrame + 1) % ctx->Gif->ImageCount;
 
@@ -131,10 +124,11 @@ static bool ReadFrame(void* context, uint8_t** pixels, int* delay)
 void ImMedia_DecoderGiflib_Install()
 {
     ImMedia::InstallImageDecoder("gif", {
-        CreateContextFromFile,
+        nullptr,
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        ReadFrame
+        BeginReadFrame,
+        nullptr
     });
 }

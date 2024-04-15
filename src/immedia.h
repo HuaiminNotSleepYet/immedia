@@ -35,17 +35,21 @@ enum class PixelFormat
 
 struct ImageDecoder
 {
-    /// @brief Create context from filename. This func can be set to nullptr, immedia would switch to @ref CreateContextFromData.
-    /// @return [nullable] nullptr if can't parsered from data.
-    void* (*CreateContextFromFile)(const char* filename);
+    /// @brief Create context from filename. This func can be set to null, immedia would switch to @ref CreateContextFromData.
+    /// @param f FILE* of a valid file, open with mode "rb" and seek to start. Don't need to call fclose on it.
+    /// @param file_size File size.
+    /// @return [nullable] null if can't parsered from file.
+    void* (*CreateContextFromFile)(void* f, size_t file_size);
     
     /// @brief Create context from memory.
-    /// @return [nullable] nullptr if can't parsered from data.
+    /// @param data Pointer to data.
+    /// @param data_size Data size.
+    /// @return [nullable] null if can't parsered from data.
     void* (*CreateContextFromData)(const uint8_t* data, size_t data_size);
 
     /// @brief Delete context.
     /// @param decoder Decoder context.
-    void  (*DeleteContext)(void* context);
+    void (*DeleteContext)(void* context);
 
     /// @brief Get image info from decoder context.
     /// @param context Decoder context.
@@ -53,13 +57,18 @@ struct ImageDecoder
     /// @param[out] height [nullable] Image height.
     /// @param[out] format [nullable] Image format, see also @ref PixelFormat.
     /// @param[out] frame_count [nullable] 0 if the image doesn't contain animation.
-    void  (*GetInfo)(void* context, int* width, int* height, PixelFormat* format, int* frame_count);
+    void (*GetInfo)(void* context, int* width, int* height, PixelFormat* format, int* frame_count);
 
-    /// @brief Read frame from decoder context.
+    /// @brief Start read one frame from decoder context.
     /// @param context Decoder context.
-    /// @param[out] pixels [nullable] A pointer to frame pixels, owned by decoder context.
-    /// @param[out] delay [nullable] In milliseconds. 0 if the image dosen't contain animation or the animation has finished playing.
-    bool  (*ReadFrame)(void* context, uint8_t** pixels, int* delay);
+    /// @param[out] pixels A pointer to frame pixels, valid until call @ref EndReadFrame.
+    /// @param[out] delay 0 if the image dosen't contain animation or the animation has finished playing.
+    /// @return true if success. Call @ref EndReadFrame after if success.
+    bool (*BeginReadFrame)(void* context, uint8_t** pixels, int* delay_in_ms);
+
+    /// @brief End read frame, can be set to null. Call it after @ref BeginReadFrame return true.
+    /// @param context Decoder context.
+    void (*EndReadFrame)(void* context);
 };
 
 struct ImageRenderer

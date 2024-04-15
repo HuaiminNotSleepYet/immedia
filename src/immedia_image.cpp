@@ -74,19 +74,28 @@ void Image::Play() const
     const size_t curremt_time = ImGui::GetCurrentContext()->Time * 1000;
     if (curremt_time < NextFrameTime)
         return;
-   
-    uint8_t* pixels;
-    int      delay;
-    if (!Decoder->ReadFrame(DecoderContext, &pixels, &delay))
-        return;
 
     Image* p = const_cast<Image*>(this);
-    GetImageRenderer()->WriteFrame(RendererContext, pixels);
-    p->NextFrameTime = curremt_time + delay;
-    if (delay == 0)
+    uint8_t* pixels;
+    int      delay;
+    if (Decoder->BeginReadFrame(DecoderContext, &pixels, &delay))
     {
-        p->NextFrameTime = SIZE_MAX;
+        GetImageRenderer()->WriteFrame(RendererContext, pixels);
+        if (Decoder->EndReadFrame)
+            Decoder->EndReadFrame(DecoderContext);
+        p->NextFrameTime = curremt_time + delay;
+        if (delay == 0)
+        {
+            p->NextFrameTime = SIZE_MAX;
+            Decoder->DeleteContext(DecoderContext);
+            p->Decoder = nullptr;
+            p->DecoderContext = nullptr;
+        }
+    }
+    else
+    {
         Decoder->DeleteContext(DecoderContext);
+        p->Decoder = nullptr;
         p->DecoderContext = nullptr;
     }
 }
@@ -168,22 +177,26 @@ void Image::Load(const char* filename, const ImageDecoder* decoder)
 {
     if (!filename || !decoder)
         return;
+
+    FILE* f = fopen(filename, "rb");
+    if (!f)
+        return;
+
+    fseek(f, 0, SEEK_END);
+    size_t file_size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+
     if (decoder->CreateContextFromFile)
-        Load(decoder->CreateContextFromFile(filename), decoder);
+        Load(decoder->CreateContextFromFile(f, file_size), decoder);
     else
     {
-        FILE* f = fopen(filename, "rb");
-        if (f == nullptr)
-            return;
-        fseek(f, 0, SEEK_END);
-        size_t file_size = ftell(f);
-        fseek(f, 0, SEEK_SET);
         uint8_t* data = new uint8_t[file_size];
         fread(data, 1, file_size, f);
-        fclose(f);
-        Load(data, file_size, decoder);
+        Load(decoder->CreateContextFromData(data, file_size), decoder);
         delete[] data;
     }
+
+    fclose(f);
 }
 
 void Image::Load(const uint8_t* data, size_t data_size, const ImageDecoder* decoder)

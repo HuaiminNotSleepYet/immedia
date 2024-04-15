@@ -15,35 +15,36 @@
 
 struct DecoderContext
 {
-    int                  Width;
-    int                  Height;
-    ImMedia::PixelFormat Format;
-    uint8_t*             Pixels;
+    int      Width;
+    int      Height;
+    int      Channles;
+
+    uint8_t* Data;
+    int      DataSize;
+
+    uint8_t* Pixels;
 };
 
 static void* CreateContextFromData(const uint8_t* data, size_t data_size)
 {
-    if (data_size > INT_MAX)
+    if (data_size > INT_MAX) 
         return nullptr;
+
     int width, height, channels;
-    uint8_t* pixels = stbi_load_from_memory(data, data_size, &width, &height, &channels, STBI_default);
-    if (!pixels)
+    if (!stbi_info_from_memory(data, data_size, &width, &height, &channels))
         return nullptr;
-    ImMedia::PixelFormat format;
-    if (channels == STBI_rgb)
-        format = ImMedia::PixelFormat::RGB888;
-    else if (channels == STBI_rgb_alpha)
-        format = ImMedia::PixelFormat::RGBA8888;
-    else
-    {
-        stbi_image_free(pixels);
+
+    if (channels != STBI_rgb && channels != STBI_rgb_alpha)
         return nullptr;
-    }
+
     DecoderContext* ctx = new DecoderContext();
-    ctx->Width  = width;
-    ctx->Height = height;
-    ctx->Format = format;
-    ctx->Pixels = pixels;
+    ctx->Width    = width;
+    ctx->Height   = height;
+    ctx->Channles = channels;
+    ctx->Data     = new uint8_t[data_size];
+    ctx->DataSize = data_size;
+    ctx->Pixels   = nullptr;
+    memcpy(ctx->Data, data, data_size);
     return ctx;
 }
 
@@ -62,18 +63,33 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
     if (frame_count) *frame_count = 0;
     if (format)
     {
-        *format = ctx->Format;
+        if (ctx->Channles == STBI_rgb)
+            *format = ImMedia::PixelFormat::RGB888;
+        else if (ctx->Channles == STBI_rgb_alpha)
+            *format = ImMedia::PixelFormat::RGBA8888;
+        else
+        { IM_ASSERT(false); }
     }
 }
 
-static bool ReadFrame(void* context, uint8_t** pixels, int* delay)
+static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
     DecoderContext* ctx = reinterpret_cast<DecoderContext*>(context);
+    ctx->Pixels = stbi_load_from_memory(ctx->Data, ctx->DataSize, &ctx->Width, &ctx->Height, nullptr, STBI_default);
     if (pixels)
+    {
         *pixels = ctx->Pixels;
-    if (delay)
-        *delay = 0;
-    return true;
+        *delay_in_ms = 0;
+        return true;
+    }
+    return false;
+}
+
+static void EndReadFrame(void* context)
+{
+    DecoderContext* ctx = reinterpret_cast<DecoderContext*>(context);
+    stbi_image_free(ctx->Pixels);
+    ctx->Pixels = nullptr;
 }
 
 void ImMedia_DecoderSTB_Install(DecoderSTBFormat format)
@@ -83,7 +99,8 @@ void ImMedia_DecoderSTB_Install(DecoderSTBFormat format)
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        ReadFrame
+        BeginReadFrame,
+        EndReadFrame
     };
 
     if (((int)format & (int)DecoderSTBFormat::BMP) > 0)

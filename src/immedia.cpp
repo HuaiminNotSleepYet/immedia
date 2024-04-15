@@ -50,7 +50,7 @@ void InstallImageDecoder(const char* format, const ImageDecoder& decoder)
     assert(decoder.CreateContextFromData);
     assert(decoder.DeleteContext);
     assert(decoder.GetInfo);
-    assert(decoder.ReadFrame);
+    assert(decoder.BeginReadFrame);
 
     if (format == nullptr || format[0] == '\0')
         return;

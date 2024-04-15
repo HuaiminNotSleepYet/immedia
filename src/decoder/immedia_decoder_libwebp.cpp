@@ -45,16 +45,10 @@ static WebpDecoderContext* CreateContext(const WebPData& webp_data)
     return ctx;
 }
 
-static void* CreateContextFromFile(const char* filename)
+static void* CreateContextFromFile(void* p, size_t file_size)
 {
-    FILE* f = fopen(filename, "rb");
-    if (!f)
-        return nullptr;
-    fseek(f, 0, SEEK_END);
-    size_t file_size = ftell(f);
-    fseek(f, 0, SEEK_SET);
     uint8_t* buffer = (uint8_t*)WebPMalloc(file_size);
-    fread(buffer, 1, file_size, f);
+    fread(buffer, 1, file_size, reinterpret_cast<FILE*>(p));
     if (!WebPGetInfo(buffer, file_size, nullptr, nullptr))
     {
         delete buffer;
@@ -115,19 +109,18 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
     }
 }
 
-static bool ReadFrame(void* context, uint8_t** pixels, int* delay)
+static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
     WebpDecoderContext* ctx = reinterpret_cast<WebpDecoderContext*>(context);
     if (!ctx->DecoderConfig.input.has_animation)
     {
-        if (pixels)
+        if (!ctx->DecoderConfig.output.u.RGBA.rgba)
         {
-            if (ctx->DecoderConfig.output.u.RGBA.rgba == nullptr)
-                WebPDecode(ctx->WebpData.bytes, ctx->WebpData.size, &ctx->DecoderConfig);
-            *pixels = ctx->DecoderConfig.output.u.RGBA.rgba;
+            if (WebPDecode(ctx->WebpData.bytes, ctx->WebpData.size, &ctx->DecoderConfig) != VP8_STATUS_OK)
+                return false;
         }
-        if (delay)
-            *delay = 0;
+        *pixels = ctx->DecoderConfig.output.u.RGBA.rgba;
+        *delay_in_ms = 0;
     }
     else
     {
@@ -138,14 +131,20 @@ static bool ReadFrame(void* context, uint8_t** pixels, int* delay)
         }
         uint8_t* frame;
         int timestamp;
-        WebPAnimDecoderGetNext(ctx->AnimDecoder, &frame, &timestamp);
-        if (pixels)
-            *pixels = frame;
-        if (delay)
-            *delay = timestamp - ctx->PreviousTimeStamp;
+        if (!WebPAnimDecoderGetNext(ctx->AnimDecoder, &frame, &timestamp))
+            return false;
+        *pixels = frame;
+        *delay_in_ms = timestamp - ctx->PreviousTimeStamp;
         ctx->PreviousTimeStamp = timestamp;
     }
     return true;
+}
+
+static void EndReadFrame(void* context)
+{
+    WebpDecoderContext* ctx = reinterpret_cast<WebpDecoderContext*>(context);
+    if (!ctx->DecoderConfig.input.has_alpha && ctx->DecoderConfig.output.u.RGBA.rgba)
+        WebPFreeDecBuffer(&ctx->DecoderConfig.output);
 }
 
 void ImMedia_DecoderLibwebp_Install()
@@ -155,6 +154,7 @@ void ImMedia_DecoderLibwebp_Install()
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        ReadFrame
+        BeginReadFrame,
+        EndReadFrame
     });
 }
