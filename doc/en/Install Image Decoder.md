@@ -1,26 +1,38 @@
 # How to: install new image decoder
 
-To install an image decoder for ImMedia, you need to set up this struct:
+To install an image decoder for immedia, you need to set up this struct:
 
 ```cpp
 struct ImageDecoder
 {
-    void* (*CreateContextFromFile)(const char* filename);
+    void* (*CreateContextFromFile)(void* f, size_t file_size);
     void* (*CreateContextFromData)(const uint8_t* data, size_t data_size);
     void  (*DeleteContext)(void* context);
 
     void  (*GetInfo)(void* context, int* width, int* height, PixelFormat* format, int* frame_count);
 
-    bool  (*ReadFrame)(void* context, uint8_t** pixels, int* delay);
+    bool  (*BeginReadFrame)(void* context, uint8_t** pixels, int* delay);
+    void  (*EndReadFrame)(void* context);
 };
 ```
 
-For `CreateContextXXX`, return a `nullptr` if the data cannot be parsed.
-> You can set `CreateContextFromFile` to nullptr, ImMedia would switch to `CreateContextFromData`.
+For `CreateContextFromFile`
+- You can set it to nullptr, immedia would switch to `CreateContextFromData`.
+- Return `nullptr` if the data cannot be parsed.
 
-For `GetInfo`, `frame_count` should be set to `0` if the image doesn't contain animation.
+For `CreateContextFromData`
+- Return `nullptr` if the data cannot be parsed.
 
-For `ReadFrame`, `delay` should be set to `0` if the image dosen't contain animation or the animation has finished playing.
+For `GetInfo`
+- `frame_count` should be set to `0` if the image doesn't contain animation.
+
+For `BeginReadFrame`
+- Return true if sucess, then EndReadFrame would be called.
+- `delay` should be set to `0` if the image dosen't contain animation or the animation has finished playing.
+
+For `EndReadFrame`
+- You can set it to nullptr.
+- It would be called after BeginReadFrame return ture.
 
 ---
 
