@@ -33,8 +33,10 @@ public:
 
     ImTextureID GetTexture() const;
 
+    /// @brief Call it to keep animation playing without call \ref Show.
     void Play() const;
 
+    /// @brief Show image, call \ref Play internally.
     void Show(const ImVec2& size,
               ImageFillMode fill_mode = ImageFillMode::Stretch,
               const ImVec2& uv0 = ImVec2(0, 0),
