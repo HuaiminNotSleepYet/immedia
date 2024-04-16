@@ -104,7 +104,10 @@ void Image::Play() const
 void Image::Show(const ImVec2& size, ImageFillMode fill_mode, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col) const
 {
     if (!RendererContext)
+    {
+        ImGui::Dummy(size);
         return;
+    }
 
     Play();
 
