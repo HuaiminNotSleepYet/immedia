@@ -18,6 +18,7 @@ struct ImageDecoder
 
 `CreateContextFromFile`
 - 如果无法解析图片，请返回 `nullptr`
+- 如果成功，由解码器负责调用 fclose
 - 你可以将其设置为 nullptr，ImMedia 会切换到 `CreateContextFromData`
 
 `CreateContextFromData`

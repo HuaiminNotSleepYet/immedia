@@ -192,11 +192,10 @@ void Image::Load(const char* filename, const ImageDecoder* decoder)
     {
         uint8_t* data = new uint8_t[file_size];
         fread(data, 1, file_size, f);
+        fclose(f);
         Load(decoder->CreateContextFromData(data, file_size), decoder);
         delete[] data;
     }
-
-    fclose(f);
 }
 
 void Image::Load(const uint8_t* data, size_t data_size, const ImageDecoder* decoder)

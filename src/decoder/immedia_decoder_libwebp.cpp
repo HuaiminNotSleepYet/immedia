@@ -45,20 +45,17 @@ static WebpDecoderContext* CreateContext(const WebPData& webp_data)
     return ctx;
 }
 
-static void* CreateContextFromFile(void* p, size_t file_size)
+static void* CreateContextFromFile(void* fp, size_t file_size)
 {
+    FILE* f = reinterpret_cast<FILE*>(fp);
     uint8_t* buffer = (uint8_t*)WebPMalloc(file_size);
-    fread(buffer, 1, file_size, reinterpret_cast<FILE*>(p));
-    if (!WebPGetInfo(buffer, file_size, nullptr, nullptr))
-    {
-        delete buffer;
-        return nullptr;
-    }
-    WebPData webp_data = {
-        buffer,
-        file_size
-    };
-    return CreateContext(webp_data);
+    fread(buffer, 1, file_size, f);
+    fclose(f);
+    WebpDecoderContext* ctx = CreateContext({ buffer, file_size });
+    if (ctx)
+        return ctx;
+    WebPFree(buffer);
+    return nullptr;
 }
 
 static void* CreateContextFromData(const uint8_t* data, size_t data_size)

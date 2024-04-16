@@ -36,7 +36,7 @@ enum class PixelFormat
 struct ImageDecoder
 {
     /// @brief Create context from filename. This func can be set to null, immedia would switch to @ref CreateContextFromData.
-    /// @param f FILE* of a valid file, open with mode "rb" and seek to start. Don't need to call fclose on it.
+    /// @param f FILE* of a valid file, open with mode "rb" and seek to start. Decoder is responsible to call fclose if success.
     /// @param file_size File size.
     /// @return [nullable] null if can't parsered from file.
     void* (*CreateContextFromFile)(void* f, size_t file_size);
