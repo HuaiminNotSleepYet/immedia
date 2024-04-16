@@ -1,3 +1,6 @@
+// ImageDecoder using stb_image.
+// stb homepage: https://github.com/nothings/stb
+
 #ifndef IMMEDIA_DECODER_STB_H
 #define IMMEDIA_DECODER_STB_H
 
