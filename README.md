@@ -46,20 +46,6 @@ ImMedia::Image image("./img.png");
 ImGui::ImageButton(image.GetTexture(), { 128, 128 });
 ```
 
-For animation image, call `Image::Play()` or `Image::Show()` every frame to keep the animation playing.
-
-```cpp
-ImMedia::Image image("./anim_img.gif");
-
-while(true) // Event loop
-{
-    // ...
-    image.Play();
-    ImGui::ImageButton(image.GetTexture(), { 128, 128 });
-    // ...
-}
-```
-
 ## Decoder
 
 ImMedia repository contains the following decoders:

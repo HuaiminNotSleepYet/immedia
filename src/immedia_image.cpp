@@ -63,6 +63,7 @@ int Image::GetHeight() const
 
 ImTextureID Image::GetTexture() const
 {
+    Play();
     return GetImageRenderer()->GetTexture(RendererContext);
 }
 

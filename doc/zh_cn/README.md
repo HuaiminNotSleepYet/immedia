@@ -46,20 +46,6 @@ ImMedia::Image image("./img.png");
 ImGui::ImageButton(image.GetTexture(), { 128, 128 });
 ```
 
-对于动图, 在每帧调用 `Image::Play()` 或 `Image::Show()` 使动图保持播放
-
-```cpp
-ImMedia::Image image("./anim_img.gif");
-
-while(true) // 事件循环
-{
-    // ...
-    image.Play();
-    ImGui::ImageButton(image.GetTexture(), { 128, 128 });
-    // ...
-}
-```
-
 ## Decoder
 
 ImMedia 仓库目前附带以下解码器:
