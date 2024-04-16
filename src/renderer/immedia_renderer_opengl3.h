@@ -84,6 +84,8 @@ void ImMedia_RendererOpenGL3_WriteFrame(void* context, const uint8_t* pixels)
 
 ImTextureID ImMedia_RendererOpenGL3_GetTexture(void* context)
 {
+    if (!context)
+        return 0;
     OpenGL3RendererContext* ctx = reinterpret_cast<OpenGL3RendererContext*>(context);
     return reinterpret_cast<ImTextureID>(ctx->Texture);
 }
