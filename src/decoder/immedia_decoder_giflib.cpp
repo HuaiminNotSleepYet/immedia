@@ -1,5 +1,7 @@
 #include "immedia_decoder_giflib.h"
 
+#include <stdio.h>
+
 #include "gif_lib.h"
 
 #include "immedia.h"
@@ -13,7 +15,7 @@ struct GiflibDecoderContext
     int          CurrentFrame;
 };
 
-static GiflibDecoderContext* GifContinuRead(GifFileType* gif)
+static GiflibDecoderContext* GifRead(GifFileType* gif)
 {
     if (!gif)
         return nullptr;
@@ -46,6 +48,23 @@ static GiflibDecoderContext* GifContinuRead(GifFileType* gif)
     return ctx;
 }
 
+static int GifFileInputFunc(GifFileType* gif, GifByteType* buf, int len)
+{
+    FILE* f = reinterpret_cast<FILE*>(gif->UserData);
+    int l = fread(buf, 1, len, f);
+    if (l < len)
+    {
+        fclose(f);
+        gif->UserData = nullptr;
+    }
+    return l;
+}
+
+static void* CreateContextFromFile(void* f, size_t file_size)
+{
+    return GifRead(DGifOpen(f, GifFileInputFunc, nullptr));
+}
+
 static int GifInputFunc(GifFileType* gif, GifByteType* buf, int len)
 {
     memcpy(buf, gif->UserData, len);
@@ -55,12 +74,14 @@ static int GifInputFunc(GifFileType* gif, GifByteType* buf, int len)
 
 static void* CreateContextFromData(const uint8_t* data, size_t data_size)
 {
-    return GifContinuRead(DGifOpen((void*)data, GifInputFunc, nullptr));
+    return GifRead(DGifOpen((void*)data, GifInputFunc, nullptr));
 }
 
 static void  DeleteContext(void* context)
 {
     GiflibDecoderContext* ctx = reinterpret_cast<GiflibDecoderContext*>(context);
+    if (ctx->Gif->UserData)
+        fclose(reinterpret_cast<FILE*>(ctx->Gif->UserData));
     DGifCloseFile(ctx->Gif, nullptr);
     delete[] ctx->FrameBuffer;
     delete ctx;
@@ -124,7 +145,7 @@ static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 void ImMedia_DecoderGiflib_Install()
 {
     ImMedia::InstallImageDecoder("gif", {
-        nullptr,
+        CreateContextFromFile,
         CreateContextFromData,
         DeleteContext,
         GetInfo,
