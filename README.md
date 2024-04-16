@@ -64,11 +64,12 @@ while(true) // Event loop
 
 ImMedia repository contains the following decoders:
 
-|                                                   | support format                    |
-| ------------------------------------------------- | --------------------------------- |
-| [GIFLIB](https://giflib.sourceforge.net/)         | gif                               |
-| [libwebp](https://github.com/webmproject/libwebp) | webp                              |
-| [qoi](https://github.com/phoboslab/qoi)           | qoi                               |
-| [stb](https://github.com/nothings/stb)            | bmp, jpg, pic, png, pnm, psd, tga |
+|                                                     | support format                    |
+| --------------------------------------------------- | --------------------------------- |
+| [GIFLIB](https://giflib.sourceforge.net/)           | gif                               |
+| [libpng](http://www.libpng.org/pub/png/libpng.html) | png                               |
+| [libwebp](https://github.com/webmproject/libwebp)   | webp                              |
+| [qoi](https://github.com/phoboslab/qoi)             | qoi                               |
+| [stb](https://github.com/nothings/stb)              | bmp, jpg, pic, png, pnm, psd, tga |
 
 To install new decoder, see also [Install Image](./doc/en/Install%20Image%20Decoder.md)
