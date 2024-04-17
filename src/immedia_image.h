@@ -137,8 +137,8 @@ public:
 
     Image(const Image&) = delete;
     Image& operator=(const Image&) = delete;
-    Image(Image&&) = delete;
-    Image& operator=(Image&&) = delete;
+    Image(Image&&) = default;
+    Image& operator=(Image&&) = default;
 
     int GetWidth()  const;
     int GetHeight() const;
