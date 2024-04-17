@@ -1,5 +1,19 @@
 # 安装自定义解码器
 
+## 仓库自带的解码器
+
+ImMedia 仓库目前附带以下解码器:
+
+|                                                     | 支持格式                          |
+| --------------------------------------------------- | --------------------------------- |
+| [GIFLIB](https://giflib.sourceforge.net/)           | gif                               |
+| [libpng](http://www.libpng.org/pub/png/libpng.html) | png                               |
+| [libwebp](https://github.com/webmproject/libwebp)   | webp                              |
+| [qoi](https://github.com/phoboslab/qoi)             | qoi                               |
+| [stb](https://github.com/nothings/stb)              | bmp, jpg, pic, png, pnm, psd, tga |
+
+## 安装你自己的解码器
+
 要安装自定义解码器，你需要设置以下结构体
 
 ```cpp
