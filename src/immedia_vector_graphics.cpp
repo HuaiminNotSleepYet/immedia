@@ -104,7 +104,6 @@ struct PolylineArgs
 
 struct PolygonArgs
 {
-    bool    Convex;
     ImVec2* Points;
     int     PointCount;
     ImU32   Color;
@@ -197,7 +196,7 @@ void VectorGraphics::AddPolyline(const ImVec2* points, int num_points, ImU32 col
     args->Flags = flags;
 }
 
-void VectorGraphics::AddPolygonFilled(const ImVec2* points, int num_points, ImU32 col, bool convex)
+void VectorGraphics::AddPolygonFilled(const ImVec2* points, int num_points, ImU32 col)
 {
     Elements.push_back(static_cast<int>(Element::Polygon));
     int old_size = ElementArgs.size();
@@ -206,7 +205,6 @@ void VectorGraphics::AddPolygonFilled(const ImVec2* points, int num_points, ImU3
     PolygonArgs* args = reinterpret_cast<PolygonArgs*>(&ElementArgs[old_size]);
     uint8_t* point_buffer = &ElementArgs[old_size] + sizeof(PolygonArgs);
     memcpy(point_buffer, points, sizeof(ImVec2) * num_points);
-    args->Convex = convex;
     args->Points = reinterpret_cast<ImVec2*>(point_buffer);
     args->PointCount = num_points;
     args->Color = col;
@@ -360,10 +358,7 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
             p->PointBuffer.resize(args->PointCount);
             for (size_t i = 0; i < args->PointCount; i++)
                 p->PointBuffer[i] = offset + args->Points[i] * scale;
-            if (args->Convex)
-                draw_list->AddConvexPolyFilled(PointBuffer.Data, args->PointCount, args->Color);
-            else
-                draw_list->AddConvexPolyFilled(PointBuffer.Data, args->PointCount, args->Color);
+            draw_list->AddConvexPolyFilled(PointBuffer.Data, args->PointCount, args->Color);
             args_size = POLYGON_ARGS_SIZE(args);
         }
         default:

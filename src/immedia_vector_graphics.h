@@ -30,7 +30,7 @@ public:
     void AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness = 0.0f, int num_segments = 0);
 
     void AddPolyline(const ImVec2* points, int num_points, ImU32 col, float thickness = 0.0f, ImDrawFlags flags = 0);
-    void AddPolygonFilled(const ImVec2* points, int num_points, ImU32 col, bool convex);
+    void AddPolygonFilled(const ImVec2* points, int num_points, ImU32 col);
 
     void Show(const ImVec2& size) const;
     void Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2& p2) const;
