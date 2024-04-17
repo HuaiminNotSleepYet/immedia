@@ -1,6 +1,8 @@
 #ifndef IMMEDIA_VECTOR_GRAPHICS_H
 #define IMMEDIA_VECTOR_GRAPHICS_H
 
+#include <stdint.h>
+
 #include "imgui.h"
 
 namespace ImMedia {
@@ -21,11 +23,9 @@ public:
     void Show(const ImVec2& size) const;
 
 private:
-    ImVec2          Size;
-    ImVector<int>   Elements;
-    ImVector<float> ElementFloatArgs;
-    ImVector<ImU32> ElementColorArgs;
-    ImVector<int>   ElementFlagsArgs;
+    ImVec2            Size;
+    ImVector<int>     Elements;
+    ImVector<uint8_t> ElementInfo;
 };
 
 }

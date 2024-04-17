@@ -7,22 +7,48 @@
 
 namespace ImMedia {
 
-#define ELEMENT_INFO(NUM, FLOAT_COUNT, COLOR_COUNT, FLAGS_COUNT) \
-    ((0xFF & NUM        ) << 20)\
-  | ((0xFF & FLOAT_COUNT) <<  3)\
-  | ((0b11 & COLOR_COUNT) <<  1)\
-  | ((0b01 & FLAGS_COUNT) <<  0)
+struct LineArgs
+{
+    float X1;
+    float Y1;
+    float X2;
+    float Y2;
+    ImU32 Color;
+    float Thinkness;
+};
 
-#define ELEMENT_FLOAT_ARG_COUNT(ELEMENT) ((int)ELEMENT >> 3) & 0xFF
-#define ELEMENT_COLOR_ARG_COUNT(ELEMENT) ((int)ELEMENT >> 1) & 0b11
-#define ELEMENT_FLAGS_ARG_COUNT(ELEMENT) ((int)ELEMENT >> 0) & 0b01
+struct RectArgs
+{
+    float X1;
+    float Y1;
+    float X2;
+    float Y2;
+    ImU32 Color;
+    float Thinkness;
+    float Rounding;
+    ImDrawFlags Flags;
+};
+
+struct RectFilledArgs
+{
+    float X1;
+    float Y1;
+    float X2;
+    float Y2;
+    ImU32 Color;
+    float Rounding;
+    ImDrawFlags Flags;
+};
+
+#define ELEMENT_INFO(ID, ARGS) ((0xFF & ID) << 16) | (0xFF & (uint16_t)sizeof(ARGS))
+
+#define ELEMENT_ARGS_SIZE(ELEMENT) (int)ELEMENT & 0xFF
 
 enum class Element : int
 {
-                          // | ID | float count | color count | flags count |
-    Line       = ELEMENT_INFO(  1,            5,            1,            0 ),
-    Rect       = ELEMENT_INFO(  2,            6,            1,            1 ),
-    RectFilled = ELEMENT_INFO(  3,            5,            1,            1 )
+    Line       = ELEMENT_INFO(1, LineArgs),
+    Rect       = ELEMENT_INFO(2, RectArgs),
+    RectFilled = ELEMENT_INFO(3, RectFilledArgs)
 };
 
 VectorGraphics::VectorGraphics(const ImVec2& size) :
@@ -36,40 +62,46 @@ ImVec2 VectorGraphics::GetSize() const
     return Size;
 }
 
+#define ADD_ELEMENT(ELEMENT, ARGS) \
+    Elements.push_back(static_cast<int>(ELEMENT));\
+    int old_size = ElementInfo.size();\
+    ElementInfo.resize(sizeof(ARGS) + old_size);\
+    ARGS* info = reinterpret_cast<ARGS*>(&ElementInfo[old_size])
+
 void VectorGraphics::AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness)
 {
-    Elements.push_back((int)Element::Line);
-    ElementFloatArgs.push_back(p1.x);
-    ElementFloatArgs.push_back(p1.y);
-    ElementFloatArgs.push_back(p2.x);
-    ElementFloatArgs.push_back(p2.y);
-    ElementColorArgs.push_back(col);
-    ElementFloatArgs.push_back(thickness);
+    ADD_ELEMENT(Element::Line, LineArgs);
+    info->X1 = p1.x;
+    info->Y1 = p1.y;
+    info->X2 = p2.x;
+    info->Y2 = p2.y;
+    info->Color = col;
+    info->Thinkness = thickness;
 }
 
 void VectorGraphics::AddRect(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness, float rounding, ImDrawFlags flags)
 {
-    Elements.push_back((int)Element::Rect);
-    ElementFloatArgs.push_back(p1.x);
-    ElementFloatArgs.push_back(p1.y);
-    ElementFloatArgs.push_back(p2.x);
-    ElementFloatArgs.push_back(p2.y);
-    ElementColorArgs.push_back(col);
-    ElementFloatArgs.push_back(thickness);
-    ElementFloatArgs.push_back(rounding);
-    ElementFlagsArgs.push_back(flags);
+    ADD_ELEMENT(Element::Rect, RectArgs);
+    info->X1 = p1.x;
+    info->Y1 = p1.y;
+    info->X2 = p2.x;
+    info->Y2 = p2.y;
+    info->Color = col;
+    info->Thinkness = thickness;
+    info->Rounding = rounding;
+    info->Flags = flags;
 }
 
 void VectorGraphics::AddRectFilled(const ImVec2& p1, const ImVec2& p2, ImU32 col, float rounding, ImDrawFlags flags)
 {
-    Elements.push_back((int)Element::RectFilled);
-    ElementFloatArgs.push_back(p1.x);
-    ElementFloatArgs.push_back(p1.y);
-    ElementFloatArgs.push_back(p2.x);
-    ElementFloatArgs.push_back(p2.y);
-    ElementColorArgs.push_back(col);
-    ElementFloatArgs.push_back(rounding);
-    ElementFlagsArgs.push_back(flags);
+    ADD_ELEMENT(Element::RectFilled, RectFilledArgs);
+    info->X1 = p1.x;
+    info->Y1 = p1.y;
+    info->X2 = p2.x;
+    info->Y2 = p2.y;
+    info->Color = col;
+    info->Rounding = rounding;
+    info->Flags = flags;
 }
 
 void VectorGraphics::Show(const ImVec2& size) const
@@ -87,20 +119,9 @@ void VectorGraphics::Show(const ImVec2& size) const
     ImGuiContext* ctx = ImGui::GetCurrentContext();
     ImDrawList* draw_list = window->DrawList;
 
-    const Element* element     = reinterpret_cast<const Element*>(Elements.begin());
-    const Element* element_end = reinterpret_cast<const Element*>(Elements.end());
-    const float*   float_args  = ElementFloatArgs.begin();
-    const ImU32*   color_args  = ElementColorArgs.begin();
-    const int*     flags_args  = ElementFlagsArgs.begin();
-
-    float x0 = 0;
-    float y0 = 0;
-    float x1 = 0;
-    float y1 = 0;
-    ImU32 color = IM_COL32_WHITE;
-    float rounding = 0;
-    float thinkness = 0;
-    int   flags = 0;
+    const Element* element      = reinterpret_cast<const Element*>(Elements.begin());
+    const Element* element_end  = reinterpret_cast<const Element*>(Elements.end());
+    const uint8_t* element_info = ElementInfo.begin();
 
     double scale = fmin(size.x / Size.x, size.y / Size.y);
     ImVec2 offset((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2);
@@ -110,56 +131,42 @@ void VectorGraphics::Show(const ImVec2& size) const
         switch (*element)
         {
         case Element::Line:
-            x0 = float_args[0];
-            y0 = float_args[1];
-            x1 = float_args[2];
-            y1 = float_args[3];
-            color = color_args[0];
-            thinkness = float_args[4];
-            draw_list->AddLine(pos + offset + ImVec2(x0, y0) * scale,
-                               pos + offset + ImVec2(x1, y1) * scale,
-                               color,
-                               thinkness == 0 ? 1 : thinkness * scale);
+        {
+            const LineArgs* args = reinterpret_cast<const LineArgs*>(element_info);
+            draw_list->AddLine(pos + offset + ImVec2(args->X1, args->Y1) * scale,
+                               pos + offset + ImVec2(args->X2, args->Y2) * scale,
+                               args->Color,
+                               args->Thinkness == 0 ? 1 : args->Thinkness * scale);
             break;
-
+        }
         case Element::Rect:
-            x0 = float_args[0];
-            y0 = float_args[1];
-            x1 = float_args[2];
-            y1 = float_args[3];
-            color = color_args[0];
-            rounding = float_args[4];
-            thinkness = float_args[5];
-            flags = flags_args[0];
-            draw_list->AddRect(pos + offset + ImVec2(x0, y0) * scale,
-                               pos + offset + ImVec2(x1, y1) * scale,
-                               color,
-                               rounding * scale,
-                               flags,
-                               thinkness == 0 ? 1 :thinkness * scale);
+        {
+            const RectArgs* args = reinterpret_cast<const RectArgs*>(element_info);
+            draw_list->AddRect(pos + offset + ImVec2(args->X1, args->Y1) * scale,
+                               pos + offset + ImVec2(args->X2, args->Y2) * scale,
+                               args->Color,
+                               args->Rounding * scale,
+                               args->Flags,
+                               args->Thinkness == 0 ? 1 : args->Thinkness * scale);
             break;
+        }
 
         case Element::RectFilled:
-            x0 = float_args[0];
-            y0 = float_args[1];
-            x1 = float_args[2];
-            y1 = float_args[3];
-            color = color_args[0];
-            rounding = float_args[4];
-            flags = flags_args[0];
-            draw_list->AddRectFilled(pos + offset + ImVec2(x0, y0) * scale,
-                                     pos + offset + ImVec2(x1, y1) * scale,
-                                     color,
-                                     rounding * scale,
-                                     flags);
+        {
+            const RectFilledArgs* args = reinterpret_cast<const RectFilledArgs*>(element_info);
+            draw_list->AddRectFilled(pos + offset + ImVec2(args->X1, args->Y1) * scale,
+                                     pos + offset + ImVec2(args->X2, args->Y2) * scale,
+                                     args->Color,
+                                     args->Rounding * scale,
+                                     args->Flags);
+            break;
+        }
 
         default:
             break;
         }
 
-        float_args += ELEMENT_FLOAT_ARG_COUNT(*element);
-        color_args += ELEMENT_COLOR_ARG_COUNT(*element);
-        flags_args += ELEMENT_FLAGS_ARG_COUNT(*element);
+        element_info += ELEMENT_ARGS_SIZE(*element);
         ++element;
     }
 }
