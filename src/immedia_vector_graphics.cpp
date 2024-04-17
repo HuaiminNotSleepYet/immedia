@@ -114,9 +114,9 @@ ImVec2 VectorGraphics::GetSize() const
 
 #define ADD_ELEMENT(ELEMENT, ARGS) \
     Elements.push_back(static_cast<int>(ELEMENT));\
-    int old_size = ElementInfo.size();\
-    ElementInfo.resize(sizeof(ARGS) + old_size);\
-    ARGS* info = reinterpret_cast<ARGS*>(&ElementInfo[old_size])
+    int old_size = ElementArgs.size();\
+    ElementArgs.resize(sizeof(ARGS) + old_size);\
+    ARGS* info = reinterpret_cast<ARGS*>(&ElementArgs[old_size])
 
 void VectorGraphics::AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness)
 {
@@ -218,7 +218,7 @@ void VectorGraphics::Show(const ImVec2& size) const
 
     const Element* element      = reinterpret_cast<const Element*>(Elements.begin());
     const Element* element_end  = reinterpret_cast<const Element*>(Elements.end());
-    const uint8_t* element_info = ElementInfo.begin();
+    const uint8_t* element_args = ElementArgs.begin();
 
     double scale = fmin(size.x / Size.x, size.y / Size.y);
     ImVec2 offset((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2);
@@ -229,7 +229,7 @@ void VectorGraphics::Show(const ImVec2& size) const
         {
         case Element::Line:
         {
-            const LineArgs* args = reinterpret_cast<const LineArgs*>(element_info);
+            const LineArgs* args = reinterpret_cast<const LineArgs*>(element_args);
             draw_list->AddLine(pos + offset + ImVec2(args->X1, args->Y1) * scale,
                                pos + offset + ImVec2(args->X2, args->Y2) * scale,
                                args->Color,
@@ -238,7 +238,7 @@ void VectorGraphics::Show(const ImVec2& size) const
         }
         case Element::Rect:
         {
-            const RectArgs* args = reinterpret_cast<const RectArgs*>(element_info);
+            const RectArgs* args = reinterpret_cast<const RectArgs*>(element_args);
             draw_list->AddRect(pos + offset + ImVec2(args->X1, args->Y1) * scale,
                                pos + offset + ImVec2(args->X2, args->Y2) * scale,
                                args->Color,
@@ -249,7 +249,7 @@ void VectorGraphics::Show(const ImVec2& size) const
         }
         case Element::RectFilled:
         {
-            const RectFilledArgs* args = reinterpret_cast<const RectFilledArgs*>(element_info);
+            const RectFilledArgs* args = reinterpret_cast<const RectFilledArgs*>(element_args);
             draw_list->AddRectFilled(pos + offset + ImVec2(args->X1, args->Y1) * scale,
                                      pos + offset + ImVec2(args->X2, args->Y2) * scale,
                                      args->Color,
@@ -259,7 +259,7 @@ void VectorGraphics::Show(const ImVec2& size) const
         }
         case Element::Circle:
         {
-            const CircleArgs* args = reinterpret_cast<const CircleArgs*>(element_info);
+            const CircleArgs* args = reinterpret_cast<const CircleArgs*>(element_args);
             draw_list->AddCircle(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
                                  args->Radius * scale,
                                  args->Color,
@@ -269,7 +269,7 @@ void VectorGraphics::Show(const ImVec2& size) const
         }
         case Element::CircleFilled:
         {
-            const CircleFilledArgs* args = reinterpret_cast<const CircleFilledArgs*>(element_info);
+            const CircleFilledArgs* args = reinterpret_cast<const CircleFilledArgs*>(element_args);
             draw_list->AddCircleFilled(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
                                        args->Radius * scale,
                                        args->Color,
@@ -278,7 +278,7 @@ void VectorGraphics::Show(const ImVec2& size) const
         }
         case Element::Ellipse:
         {
-            const EllipseArgs* args = reinterpret_cast<const EllipseArgs*>(element_info);
+            const EllipseArgs* args = reinterpret_cast<const EllipseArgs*>(element_args);
             draw_list->AddEllipse(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
                                   args->RadiusX * scale, args->RadiusY * scale,
                                   args->Color,
@@ -289,7 +289,7 @@ void VectorGraphics::Show(const ImVec2& size) const
         }
         case Element::Ellipsefilled:
         {
-            const EllipseFilledArgs* args = reinterpret_cast<const EllipseFilledArgs*>(element_info);
+            const EllipseFilledArgs* args = reinterpret_cast<const EllipseFilledArgs*>(element_args);
             draw_list->AddEllipseFilled(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
                                         args->RadiusX * scale, args->RadiusY * scale,
                                         args->Color,
@@ -301,7 +301,7 @@ void VectorGraphics::Show(const ImVec2& size) const
             break;
         }
 
-        element_info += ELEMENT_ARGS_SIZE(*element);
+        element_args += ELEMENT_ARGS_SIZE(*element);
         ++element;
     }
 }

@@ -31,7 +31,7 @@ public:
 private:
     ImVec2            Size;
     ImVector<int>     Elements;
-    ImVector<uint8_t> ElementInfo;
+    ImVector<uint8_t> ElementArgs;
 };
 
 }
