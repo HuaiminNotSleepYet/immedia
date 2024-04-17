@@ -40,14 +40,18 @@ struct RectFilledArgs
     ImDrawFlags Flags;
 };
 
+// The structure of VectorGraphicsElement
+// | 0 - 16           | 16 - 32 |
+// | args struct size | id      |
+
 #define ELEMENT_INFO(ID, ARGS) ((0xFF & ID) << 16) | (0xFF & (uint16_t)sizeof(ARGS))
 
 #define ELEMENT_ARGS_SIZE(ELEMENT) (int)ELEMENT & 0xFF
 
 enum class Element : int
 {
-    Line       = ELEMENT_INFO(1, LineArgs),
-    Rect       = ELEMENT_INFO(2, RectArgs),
+    Line       = ELEMENT_INFO(1, LineArgs      ),
+    Rect       = ELEMENT_INFO(2, RectArgs      ),
     RectFilled = ELEMENT_INFO(3, RectFilledArgs)
 };
 
