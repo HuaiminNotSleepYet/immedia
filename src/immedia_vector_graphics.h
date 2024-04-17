@@ -23,8 +23,8 @@ public:
     void AddCircle       (const ImVec2& center, float radius, ImU32 col, float thickness = 0.0f, int num_segments = 0);
     void AddCircleFilled (const ImVec2& center, float radius, ImU32 col,                         int num_segments = 0);
 
-    void AddEllipse      (const ImVec2& center, const ImVec2& radius, ImU32 col, float rot = 0.0f, float thickness = 0.0f, int num_segments = 0);
-    void AddEllipseFilled(const ImVec2& center, const ImVec2& radius, ImU32 col, float rot = 0.0f,                         int num_segments = 0);
+    void AddEllipse      (const ImVec2& center, const ImVec2& radius, ImU32 col, float thickness = 0.0f, float rot = 0.0f, int num_segments = 0);
+    void AddEllipseFilled(const ImVec2& center, const ImVec2& radius, ImU32 col,                         float rot = 0.0f, int num_segments = 0);
 
     void Show(const ImVec2& size) const;
 
