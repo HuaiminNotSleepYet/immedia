@@ -1,9 +1,13 @@
 # ImMedia
 
+Image and vector graphics extensions for [imgui](https://github.com/ocornut/imgui).
+
+---
+
 - [English](./README.md)
 - [中文](./doc/zh_cn/README.md)
 
-## Quick Start
+## Image
 
 ```cpp
 #include ...
