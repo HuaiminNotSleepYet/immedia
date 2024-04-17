@@ -218,8 +218,7 @@ void VectorGraphics::Show(const ImVec2& size) const
     if (window->SkipItems)
         return;
 
-    const ImVec2 pos = window->DC.CursorPos;
-    const ImRect bb(pos, pos + size);
+    const ImRect bb(window->DC.CursorPos, window->DC.CursorPos + size);
     ImGui::ItemSize(bb);
     if (!ImGui::ItemAdd(bb, 0))
         return;
@@ -374,6 +373,17 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
         ++element;
         element_args += args_size;
     }
+}
+
+bool VGButton(const VectorGraphics& vg, const ImVec2& size)
+{
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+    const ImVec2 padding = ImGui::GetStyle().FramePadding;
+    bool pressed = ImGui::Button("##", size);
+    vg.Draw(window->DrawList, ImGui::GetItemRectMin() + padding, ImGui::GetItemRectMax() - padding);
+    return pressed;
 }
 
 }
