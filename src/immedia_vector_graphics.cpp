@@ -9,20 +9,16 @@ namespace ImMedia {
 
 struct LineArgs
 {
-    float X1;
-    float Y1;
-    float X2;
-    float Y2;
-    ImU32 Color;
-    float Thinkness;
+    ImVec2 P1;
+    ImVec2 P2;
+    ImU32  Color;
+    float  Thinkness;
 };
 
 struct RectArgs
 {
-    float X1;
-    float Y1;
-    float X2;
-    float Y2;
+    ImVec2 P1;
+    ImVec2 P2;
     ImU32 Color;
     float Thinkness;
     float Rounding;
@@ -31,10 +27,8 @@ struct RectArgs
 
 struct RectFilledArgs
 {
-    float X1;
-    float Y1;
-    float X2;
-    float Y2;
+    ImVec2 P1;
+    ImVec2 P2;
     ImU32 Color;
     float Rounding;
     ImDrawFlags Flags;
@@ -42,72 +36,59 @@ struct RectFilledArgs
 
 struct CircleArgs
 {
-    float CenterX;
-    float CenterY;
-    float Radius;
-    ImU32 Color;
-    float Thinkness;
-    int   Segments;
+    ImVec2 Center;
+    float  Radius;
+    ImU32  Color;
+    float  Thinkness;
+    int    Segments;
 };
 
 struct CircleFilledArgs
 {
-    float CenterX;
-    float CenterY;
-    float Radius;
-    ImU32 Color;
-    int   Segments;
+    ImVec2 Center;
+    float  Radius;
+    ImU32  Color;
+    int    Segments;
 };
 
 struct EllipseArgs
 {
-    float CenterX;
-    float CenterY;
-    float RadiusX;
-    float RadiusY;
-    float Rotation;
-    ImU32 Color;
-    float Thinkness;
-    int   Segments;
+    ImVec2 Center;
+    ImVec2 Radius;
+    float  Rotation;
+    ImU32  Color;
+    float  Thinkness;
+    int    Segments;
 };
 
 struct EllipseFilledArgs
 {
-    float CenterX;
-    float CenterY;
-    float RadiusX;
-    float RadiusY;
-    float Rotation;
-    ImU32 Color;
-    int   Segments;
+    ImVec2 Center;
+    ImVec2 Radius;
+    float  Rotation;
+    ImU32  Color;
+    int    Segments;
 };
 
 struct BezierCubicArgs
 {
-    float P1X;
-    float P1Y;
-    float P2X;
-    float P2Y;
-    float P3X;
-    float P3Y;
-    float P4X;
-    float P4Y;
-    ImU32 Color;
-    float Thinkness;
-    int   Segments;
+    ImVec2 P1;
+    ImVec2 P2;
+    ImVec2 P3;
+    ImVec2 P4;
+    ImU32  Color;
+    float  Thinkness;
+    int    Segments;
 };
 
 struct BezierQuadraticArgs
 {
-    float P1X;
-    float P1Y;
-    float P2X;
-    float P2Y;
-    float P3X;
-    float P3Y;
-    ImU32 Color;
-    float Thinkness;
-    int   Segments;
+    ImVec2 P1;
+    ImVec2 P2;
+    ImVec2 P3;
+    ImU32  Color;
+    float  Thinkness;
+    int    Segments;
 };
 
 struct PolylineArgs
@@ -174,31 +155,31 @@ ImVec2 VectorGraphics::GetSize() const
     *reinterpret_cast<ARGS*>(&ElementArgs[old_size]) =
 
 void VectorGraphics::AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness)
-{ ADD_ELEMENT(Element::Line, LineArgs) { p1.x, p1.y, p2.x, p2.y, col, thickness }; }
+{ ADD_ELEMENT(Element::Line, LineArgs) { p1, p2, col, thickness }; }
 
 void VectorGraphics::AddRect(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness, float rounding, ImDrawFlags flags)
-{ ADD_ELEMENT(Element::Rect, RectArgs) { p1.x, p1.y, p2.x, p2.y, col, thickness, rounding, flags }; }
+{ ADD_ELEMENT(Element::Rect, RectArgs) { p1, p2, col, thickness, rounding, flags }; }
 
 void VectorGraphics::AddRectFilled(const ImVec2& p1, const ImVec2& p2, ImU32 col, float rounding, ImDrawFlags flags)
-{ ADD_ELEMENT(Element::RectFilled, RectFilledArgs) { p1.x, p1.y, p2.x, p2.y, col, rounding, flags }; }
+{ ADD_ELEMENT(Element::RectFilled, RectFilledArgs) { p1, p2, col, rounding, flags }; }
 
 void VectorGraphics::AddCircle(const ImVec2& center, float radius, ImU32 col, float thickness, int num_segments)
-{ ADD_ELEMENT(Element::Circle, CircleArgs) { center.x, center.y, radius, col, thickness, num_segments }; }
+{ ADD_ELEMENT(Element::Circle, CircleArgs) { center, radius, col, thickness, num_segments }; }
 
 void VectorGraphics::AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments)
-{ ADD_ELEMENT(Element::CircleFilled, CircleFilledArgs) { center.x, center.y, radius, col, num_segments }; }
+{ ADD_ELEMENT(Element::CircleFilled, CircleFilledArgs) { center, radius, col, num_segments }; }
 
 void VectorGraphics::AddEllipse(const ImVec2& center, const ImVec2& radius, ImU32 col, float rot, float thickness, int num_segments)
-{ ADD_ELEMENT(Element::Ellipse, EllipseArgs) { center.x, center.y, radius.x, radius.y, rot, col, thickness, num_segments }; }
+{ ADD_ELEMENT(Element::Ellipse, EllipseArgs) { center, radius, rot, col, thickness, num_segments }; }
 
 void VectorGraphics::AddEllipseFilled(const ImVec2& center, const ImVec2& radius, ImU32 col, float rot, int num_segments)
-{ ADD_ELEMENT(Element::Ellipsefilled, EllipseFilledArgs) { center.x, center.y, radius.x, radius.y, rot, col, num_segments }; }
+{ ADD_ELEMENT(Element::Ellipsefilled, EllipseFilledArgs) { center, radius, rot, col, num_segments }; }
 
 void VectorGraphics::AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments)
-{ ADD_ELEMENT(Element::BezierCubic, BezierCubicArgs) { p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, col, thickness, num_segments }; }
+{ ADD_ELEMENT(Element::BezierCubic, BezierCubicArgs) { p1, p2, p3, p4, col, thickness, num_segments }; }
 
 void VectorGraphics::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments)
-{ ADD_ELEMENT(Element::BezierQuadratic, BezierQuadraticArgs) { p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, col, thickness, num_segments }; }
+{ ADD_ELEMENT(Element::BezierQuadratic, BezierQuadraticArgs) { p1, p2, p3, col, thickness, num_segments }; }
 
 void VectorGraphics::AddPolyline(const ImVec2* points, int num_points, ImU32 col, float thickness, ImDrawFlags flags)
 {
@@ -251,7 +232,7 @@ void VectorGraphics::Show(const ImVec2& size) const
     const uint8_t* element_args = ElementArgs.begin();
 
     double scale = fmin(size.x / Size.x, size.y / Size.y);
-    ImVec2 offset((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2);
+    ImVec2 offset = ImVec2((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2) + pos;
 
     while (element < element_end)
     {
@@ -262,8 +243,8 @@ void VectorGraphics::Show(const ImVec2& size) const
         case Element::Line:
         {
             const LineArgs* args = reinterpret_cast<const LineArgs*>(element_args);
-            draw_list->AddLine(pos + offset + ImVec2(args->X1, args->Y1) * scale,
-                               pos + offset + ImVec2(args->X2, args->Y2) * scale,
+            draw_list->AddLine(offset + args->P1 * scale,
+                               offset + args->P2 * scale,
                                args->Color,
                                args->Thinkness == 0 ? 1 : args->Thinkness * scale);
             break;
@@ -271,8 +252,8 @@ void VectorGraphics::Show(const ImVec2& size) const
         case Element::Rect:
         {
             const RectArgs* args = reinterpret_cast<const RectArgs*>(element_args);
-            draw_list->AddRect(pos + offset + ImVec2(args->X1, args->Y1) * scale,
-                               pos + offset + ImVec2(args->X2, args->Y2) * scale,
+            draw_list->AddRect(offset + args->P1 * scale,
+                               offset + args->P2 * scale,
                                args->Color,
                                args->Rounding * scale,
                                args->Flags,
@@ -282,8 +263,8 @@ void VectorGraphics::Show(const ImVec2& size) const
         case Element::RectFilled:
         {
             const RectFilledArgs* args = reinterpret_cast<const RectFilledArgs*>(element_args);
-            draw_list->AddRectFilled(pos + offset + ImVec2(args->X1, args->Y1) * scale,
-                                     pos + offset + ImVec2(args->X2, args->Y2) * scale,
+            draw_list->AddRectFilled(offset + args->P1 * scale,
+                                     offset + args->P2 * scale,
                                      args->Color,
                                      args->Rounding * scale,
                                      args->Flags);
@@ -292,7 +273,7 @@ void VectorGraphics::Show(const ImVec2& size) const
         case Element::Circle:
         {
             const CircleArgs* args = reinterpret_cast<const CircleArgs*>(element_args);
-            draw_list->AddCircle(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
+            draw_list->AddCircle(offset + args->Center * scale,
                                  args->Radius * scale,
                                  args->Color,
                                  args->Segments,
@@ -302,7 +283,7 @@ void VectorGraphics::Show(const ImVec2& size) const
         case Element::CircleFilled:
         {
             const CircleFilledArgs* args = reinterpret_cast<const CircleFilledArgs*>(element_args);
-            draw_list->AddCircleFilled(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
+            draw_list->AddCircleFilled(offset + args->Center * scale,
                                        args->Radius * scale,
                                        args->Color,
                                        args->Segments);
@@ -311,8 +292,9 @@ void VectorGraphics::Show(const ImVec2& size) const
         case Element::Ellipse:
         {
             const EllipseArgs* args = reinterpret_cast<const EllipseArgs*>(element_args);
-            draw_list->AddEllipse(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
-                                  args->RadiusX * scale, args->RadiusY * scale,
+            draw_list->AddEllipse(pos + offset + args->Center * scale,
+                                  args->Radius.x * scale,
+                                  args->Radius.y * scale,
                                   args->Color,
                                   args->Rotation,
                                   args->Segments,
@@ -322,8 +304,9 @@ void VectorGraphics::Show(const ImVec2& size) const
         case Element::Ellipsefilled:
         {
             const EllipseFilledArgs* args = reinterpret_cast<const EllipseFilledArgs*>(element_args);
-            draw_list->AddEllipseFilled(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
-                                        args->RadiusX * scale, args->RadiusY * scale,
+            draw_list->AddEllipseFilled(pos + offset + args->Center * scale,
+                                        args->Radius.x * scale,
+                                        args->Radius.y * scale,
                                         args->Color,
                                         args->Rotation,
                                         args->Segments);
@@ -332,10 +315,10 @@ void VectorGraphics::Show(const ImVec2& size) const
         case Element::BezierCubic:
         {
             const BezierCubicArgs* args = reinterpret_cast<const BezierCubicArgs*>(element_args);
-            draw_list->AddBezierCubic(pos + offset + ImVec2(args->P1X, args->P1Y) * scale,
-                                      pos + offset + ImVec2(args->P2X, args->P2Y) * scale,
-                                      pos + offset + ImVec2(args->P3X, args->P3Y) * scale,
-                                      pos + offset + ImVec2(args->P4X, args->P4Y) * scale,
+            draw_list->AddBezierCubic(offset + args->P1 * scale,
+                                      offset + args->P2 * scale,
+                                      offset + args->P3 * scale,
+                                      offset + args->P4 * scale,
                                       args->Color,
                                       args->Thinkness == 0 ? 1 : args->Thinkness * scale,
                                       args->Segments);
@@ -344,9 +327,9 @@ void VectorGraphics::Show(const ImVec2& size) const
         case Element::BezierQuadratic:
         {
             const BezierQuadraticArgs* args = reinterpret_cast<const BezierQuadraticArgs*>(element_args);
-            draw_list->AddBezierQuadratic(pos + offset + ImVec2(args->P1X, args->P1Y) * scale,
-                                          pos + offset + ImVec2(args->P2X, args->P2Y) * scale,
-                                          pos + offset + ImVec2(args->P3X, args->P3Y) * scale,
+            draw_list->AddBezierQuadratic(offset + args->P1 * scale,
+                                          offset + args->P2 * scale,
+                                          offset + args->P3 * scale,
                                           args->Color,
                                           args->Thinkness == 0 ? 1 : args->Thinkness * scale,
                                           args->Segments);
