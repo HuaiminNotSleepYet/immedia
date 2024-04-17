@@ -4,7 +4,7 @@
 
 #include "webp/demux.h"
 
-#include "immedia.h"
+#include "immedia_image.h"
 
 struct WebpDecoderContext
 {

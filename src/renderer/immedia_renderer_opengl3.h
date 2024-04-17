@@ -24,7 +24,7 @@ void ImMedia_RendererOpenGL3_Install();
 
 #ifdef IMMEDIA_RENDERER_OPENGL3_IMPL
 
-#include "immedia.h"
+#include "immedia_image.h"
 
 struct OpenGL3RendererContext
 {

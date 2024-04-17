@@ -2,7 +2,7 @@
 
 #include "png.h"
 
-#include "immedia.h"
+#include "immedia_image.h"
 
 #define PNG_HEADER_SIZE 8
 

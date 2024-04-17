@@ -4,7 +4,7 @@
 
 #include "gif_lib.h"
 
-#include "immedia.h"
+#include "immedia_image.h"
 
 struct GiflibDecoderContext
 {

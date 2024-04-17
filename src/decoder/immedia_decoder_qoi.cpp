@@ -4,7 +4,7 @@
 #define QOI_NO_STDIO
 #include "qoi.h"
 
-#include "immedia.h"
+#include "immedia_image.h"
 
 struct QOIDecoderContext
 {

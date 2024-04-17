@@ -11,7 +11,7 @@
 #define STBI_NO_HDR
 #include "stb_image.h"
 
-#include "immedia.h"
+#include "immedia_image.h"
 
 struct DecoderContext
 {
