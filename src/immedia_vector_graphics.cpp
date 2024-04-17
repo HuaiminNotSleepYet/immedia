@@ -59,6 +59,29 @@ struct CircleFilledArgs
     int   Segments;
 };
 
+struct EllipseArgs
+{
+    float CenterX;
+    float CenterY;
+    float RadiusX;
+    float RadiusY;
+    float Rotation;
+    ImU32 Color;
+    float Thinkness;
+    int   Segments;
+};
+
+struct EllipseFilledArgs
+{
+    float CenterX;
+    float CenterY;
+    float RadiusX;
+    float RadiusY;
+    float Rotation;
+    ImU32 Color;
+    int   Segments;
+};
+
 // The structure of VectorGraphicsElement
 // | 0 - 16           | 16 - 32 |
 // | args struct size | id      |
@@ -69,11 +92,13 @@ struct CircleFilledArgs
 
 enum class Element : int
 {
-    Line         = ELEMENT_INFO(1, LineArgs        ),
-    Rect         = ELEMENT_INFO(2, RectArgs        ),
-    RectFilled   = ELEMENT_INFO(3, RectFilledArgs  ),
-    Circle       = ELEMENT_INFO(4, CircleArgs      ),
-    CircleFilled = ELEMENT_INFO(5, CircleFilledArgs)
+    Line          = ELEMENT_INFO(1, LineArgs         ),
+    Rect          = ELEMENT_INFO(2, RectArgs         ),
+    RectFilled    = ELEMENT_INFO(3, RectFilledArgs   ),
+    Circle        = ELEMENT_INFO(4, CircleArgs       ),
+    CircleFilled  = ELEMENT_INFO(5, CircleFilledArgs ),
+    Ellipse       = ELEMENT_INFO(6, EllipseArgs      ),
+    Ellipsefilled = ELEMENT_INFO(6, EllipseFilledArgs)
 };
 
 VectorGraphics::VectorGraphics(const ImVec2& size) :
@@ -150,6 +175,32 @@ void VectorGraphics::AddCircleFilled(const ImVec2& center, float radius, ImU32 c
     info->Segments = num_segments;
 }
 
+void VectorGraphics::AddEllipse(const ImVec2& center, const ImVec2& radius, ImU32 col, float rot, float thickness, int num_segments)
+{
+    ADD_ELEMENT(Element::Ellipse, EllipseArgs);
+    info->CenterX = center.x;
+    info->CenterY = center.y;
+    info->RadiusX = radius.x;
+    info->RadiusY = radius.y;
+    info->Rotation = rot;
+    info->Color = col;
+    info->Thinkness = thickness;
+    info->Segments = num_segments;
+}
+
+void VectorGraphics::AddEllipseFilled(const ImVec2& center, const ImVec2& radius, ImU32 col, float rot, int num_segments)
+{
+    ADD_ELEMENT(Element::Ellipsefilled, EllipseFilledArgs);
+    info->CenterX = center.x;
+    info->CenterY = center.y;
+    info->RadiusX = radius.x;
+    info->RadiusY = radius.y;
+    info->Rotation = rot;
+    info->Color = col;
+    info->Segments = num_segments;
+
+}
+
 void VectorGraphics::Show(const ImVec2& size) const
 {
     ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -223,6 +274,27 @@ void VectorGraphics::Show(const ImVec2& size) const
                                        args->Radius * scale,
                                        args->Color,
                                        args->Segments);
+            break;
+        }
+        case Element::Ellipse:
+        {
+            const EllipseArgs* args = reinterpret_cast<const EllipseArgs*>(element_info);
+            draw_list->AddEllipse(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
+                                  args->RadiusX * scale, args->RadiusY * scale,
+                                  args->Color,
+                                  args->Rotation,
+                                  args->Segments,
+                                  args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+            break;
+        }
+        case Element::Ellipsefilled:
+        {
+            const EllipseFilledArgs* args = reinterpret_cast<const EllipseFilledArgs*>(element_info);
+            draw_list->AddEllipseFilled(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
+                                        args->RadiusX * scale, args->RadiusY * scale,
+                                        args->Color,
+                                        args->Rotation,
+                                        args->Segments);
             break;
         }
         default:
