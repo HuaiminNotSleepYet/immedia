@@ -2,7 +2,7 @@
 
 #include "SDL2/SDL.h"
 
-#include "immedia.h"
+#include "immedia_image.h"
 
 static SDL_Renderer* GRenderer = nullptr;
 
