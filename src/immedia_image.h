@@ -29,9 +29,11 @@ namespace ImMedia {
 
 enum class PixelFormat
 {
-    RGB888,
-    RGBA8888
+    RGB888   = 0x003,
+    RGBA8888 = 0x104
 };
+
+static int PixelSize(PixelFormat format) { return (int)format & 0xFF; }
 
 struct ImageDecoder
 {
