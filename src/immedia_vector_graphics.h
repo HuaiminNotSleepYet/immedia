@@ -33,6 +33,7 @@ public:
     void AddPolygonFilled(const ImVec2* points, int num_points, ImU32 col, bool convex);
 
     void Show(const ImVec2& size) const;
+    void Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2& p2) const;
 
 private:
     ImVec2            Size;

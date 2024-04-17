@@ -224,15 +224,20 @@ void VectorGraphics::Show(const ImVec2& size) const
     if (!ImGui::ItemAdd(bb, 0))
         return;
 
-    ImGuiContext* ctx = ImGui::GetCurrentContext();
-    ImDrawList* draw_list = window->DrawList;
+    if (Elements.empty())
+        return;
+    Draw(window->DrawList, bb.Min, bb.Max);
+}
+
+void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2& p2) const
+{
+    const ImVec2 size = p2 - p1;
+    double scale = fmin(size.x / Size.x, size.y / Size.y);
+    ImVec2 offset = ImVec2((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2) + p1;
 
     const Element* element      = reinterpret_cast<const Element*>(Elements.begin());
     const Element* element_end  = reinterpret_cast<const Element*>(Elements.end());
     const uint8_t* element_args = ElementArgs.begin();
-
-    double scale = fmin(size.x / Size.x, size.y / Size.y);
-    ImVec2 offset = ImVec2((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2) + pos;
 
     while (element < element_end)
     {
@@ -244,95 +249,95 @@ void VectorGraphics::Show(const ImVec2& size) const
         {
             const LineArgs* args = reinterpret_cast<const LineArgs*>(element_args);
             draw_list->AddLine(offset + args->P1 * scale,
-                               offset + args->P2 * scale,
-                               args->Color,
-                               args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+                offset + args->P2 * scale,
+                args->Color,
+                args->Thinkness == 0 ? 1 : args->Thinkness * scale);
             break;
         }
         case Element::Rect:
         {
             const RectArgs* args = reinterpret_cast<const RectArgs*>(element_args);
             draw_list->AddRect(offset + args->P1 * scale,
-                               offset + args->P2 * scale,
-                               args->Color,
-                               args->Rounding * scale,
-                               args->Flags,
-                               args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+                offset + args->P2 * scale,
+                args->Color,
+                args->Rounding * scale,
+                args->Flags,
+                args->Thinkness == 0 ? 1 : args->Thinkness * scale);
             break;
         }
         case Element::RectFilled:
         {
             const RectFilledArgs* args = reinterpret_cast<const RectFilledArgs*>(element_args);
             draw_list->AddRectFilled(offset + args->P1 * scale,
-                                     offset + args->P2 * scale,
-                                     args->Color,
-                                     args->Rounding * scale,
-                                     args->Flags);
+                offset + args->P2 * scale,
+                args->Color,
+                args->Rounding * scale,
+                args->Flags);
             break;
         }
         case Element::Circle:
         {
             const CircleArgs* args = reinterpret_cast<const CircleArgs*>(element_args);
             draw_list->AddCircle(offset + args->Center * scale,
-                                 args->Radius * scale,
-                                 args->Color,
-                                 args->Segments,
-                                 args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+                args->Radius * scale,
+                args->Color,
+                args->Segments,
+                args->Thinkness == 0 ? 1 : args->Thinkness * scale);
             break;
         }
         case Element::CircleFilled:
         {
             const CircleFilledArgs* args = reinterpret_cast<const CircleFilledArgs*>(element_args);
             draw_list->AddCircleFilled(offset + args->Center * scale,
-                                       args->Radius * scale,
-                                       args->Color,
-                                       args->Segments);
+                args->Radius * scale,
+                args->Color,
+                args->Segments);
             break;
         }
         case Element::Ellipse:
         {
             const EllipseArgs* args = reinterpret_cast<const EllipseArgs*>(element_args);
-            draw_list->AddEllipse(pos + offset + args->Center * scale,
-                                  args->Radius.x * scale,
-                                  args->Radius.y * scale,
-                                  args->Color,
-                                  args->Rotation,
-                                  args->Segments,
-                                  args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+            draw_list->AddEllipse(offset + args->Center * scale,
+                args->Radius.x * scale,
+                args->Radius.y * scale,
+                args->Color,
+                args->Rotation,
+                args->Segments,
+                args->Thinkness == 0 ? 1 : args->Thinkness * scale);
             break;
         }
         case Element::Ellipsefilled:
         {
             const EllipseFilledArgs* args = reinterpret_cast<const EllipseFilledArgs*>(element_args);
-            draw_list->AddEllipseFilled(pos + offset + args->Center * scale,
-                                        args->Radius.x * scale,
-                                        args->Radius.y * scale,
-                                        args->Color,
-                                        args->Rotation,
-                                        args->Segments);
+            draw_list->AddEllipseFilled(offset + args->Center * scale,
+                args->Radius.x * scale,
+                args->Radius.y * scale,
+                args->Color,
+                args->Rotation,
+                args->Segments);
             break;
         }
         case Element::BezierCubic:
         {
             const BezierCubicArgs* args = reinterpret_cast<const BezierCubicArgs*>(element_args);
             draw_list->AddBezierCubic(offset + args->P1 * scale,
-                                      offset + args->P2 * scale,
-                                      offset + args->P3 * scale,
-                                      offset + args->P4 * scale,
-                                      args->Color,
-                                      args->Thinkness == 0 ? 1 : args->Thinkness * scale,
-                                      args->Segments);
+                offset + args->P2 * scale,
+                offset + args->P3 * scale,
+                offset + args->P4 * scale,
+                args->Color,
+                args->Thinkness == 0 ? 1 : args->Thinkness * scale,
+                args->Segments);
             break;
         }
         case Element::BezierQuadratic:
         {
             const BezierQuadraticArgs* args = reinterpret_cast<const BezierQuadraticArgs*>(element_args);
             draw_list->AddBezierQuadratic(offset + args->P1 * scale,
-                                          offset + args->P2 * scale,
-                                          offset + args->P3 * scale,
-                                          args->Color,
-                                          args->Thinkness == 0 ? 1 : args->Thinkness * scale,
-                                          args->Segments);
+                offset + args->P2 * scale,
+                offset + args->P3 * scale,
+                args->Color,
+                args->Thinkness == 0 ? 1 : args->Thinkness * scale,
+                args->Segments);
             break;
         }
         case Element::Polyline:
@@ -341,11 +346,11 @@ void VectorGraphics::Show(const ImVec2& size) const
             const PolylineArgs* args = reinterpret_cast<const PolylineArgs*>(element_args);
             p->PointBuffer.resize(args->PointCount);
             for (size_t i = 0; i < args->PointCount; i++)
-                p->PointBuffer[i] = pos + offset + args->Points[i] * scale;
+                p->PointBuffer[i] = offset + args->Points[i] * scale;
             draw_list->AddPolyline(PointBuffer.Data, args->PointCount,
-                                   args->Color,
-                                   args->Flags,
-                                   args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+                args->Color,
+                args->Flags,
+                args->Thinkness == 0 ? 1 : args->Thinkness * scale);
             args_size = POLYLINE_ARGS_SIZE(args);
             break;
         }
@@ -355,7 +360,7 @@ void VectorGraphics::Show(const ImVec2& size) const
             const PolygonArgs* args = reinterpret_cast<const PolygonArgs*>(element_args);
             p->PointBuffer.resize(args->PointCount);
             for (size_t i = 0; i < args->PointCount; i++)
-                p->PointBuffer[i] = pos + offset + args->Points[i] * scale;
+                p->PointBuffer[i] = offset + args->Points[i] * scale;
             if (args->Convex)
                 draw_list->AddConvexPolyFilled(PointBuffer.Data, args->PointCount, args->Color);
             else
