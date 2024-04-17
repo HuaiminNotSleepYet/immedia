@@ -26,12 +26,16 @@ public:
     void AddEllipse      (const ImVec2& center, const ImVec2& radius, ImU32 col, float thickness = 0.0f, float rot = 0.0f, int num_segments = 0);
     void AddEllipseFilled(const ImVec2& center, const ImVec2& radius, ImU32 col,                         float rot = 0.0f, int num_segments = 0);
 
+    void AddPolyline(const ImVec2* points, int num_points, ImU32 col, float thickness = 0.0f, ImDrawFlags flags = 0);
+
     void Show(const ImVec2& size) const;
 
 private:
     ImVec2            Size;
     ImVector<int>     Elements;
     ImVector<uint8_t> ElementArgs;
+
+    ImVector<ImVec2>  PointBuffer;
 };
 
 }
