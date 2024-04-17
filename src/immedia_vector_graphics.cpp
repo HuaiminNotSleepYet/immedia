@@ -116,90 +116,28 @@ ImVec2 VectorGraphics::GetSize() const
     Elements.push_back(static_cast<int>(ELEMENT));\
     int old_size = ElementArgs.size();\
     ElementArgs.resize(sizeof(ARGS) + old_size);\
-    ARGS* info = reinterpret_cast<ARGS*>(&ElementArgs[old_size])
+    *reinterpret_cast<ARGS*>(&ElementArgs[old_size]) =
 
 void VectorGraphics::AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness)
-{
-    ADD_ELEMENT(Element::Line, LineArgs);
-    info->X1 = p1.x;
-    info->Y1 = p1.y;
-    info->X2 = p2.x;
-    info->Y2 = p2.y;
-    info->Color = col;
-    info->Thinkness = thickness;
-}
+{ ADD_ELEMENT(Element::Line, LineArgs) { p1.x, p1.y, p2.x, p2.y, col, thickness }; }
 
 void VectorGraphics::AddRect(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness, float rounding, ImDrawFlags flags)
-{
-    ADD_ELEMENT(Element::Rect, RectArgs);
-    info->X1 = p1.x;
-    info->Y1 = p1.y;
-    info->X2 = p2.x;
-    info->Y2 = p2.y;
-    info->Color = col;
-    info->Thinkness = thickness;
-    info->Rounding = rounding;
-    info->Flags = flags;
-}
+{ ADD_ELEMENT(Element::Rect, RectArgs) { p1.x, p1.y, p2.x, p2.y, col, thickness, rounding, flags }; }
 
 void VectorGraphics::AddRectFilled(const ImVec2& p1, const ImVec2& p2, ImU32 col, float rounding, ImDrawFlags flags)
-{
-    ADD_ELEMENT(Element::RectFilled, RectFilledArgs);
-    info->X1 = p1.x;
-    info->Y1 = p1.y;
-    info->X2 = p2.x;
-    info->Y2 = p2.y;
-    info->Color = col;
-    info->Rounding = rounding;
-    info->Flags = flags;
-}
+{ ADD_ELEMENT(Element::RectFilled, RectFilledArgs) { p1.x, p1.y, p2.x, p2.y, col, rounding, flags }; }
 
 void VectorGraphics::AddCircle(const ImVec2& center, float radius, ImU32 col, float thickness, int num_segments)
-{
-    ADD_ELEMENT(Element::Circle, CircleArgs);
-    info->CenterX = center.x;
-    info->CenterY = center.y;
-    info->Radius = radius;
-    info->Color = col;
-    info->Thinkness = thickness;
-    info->Segments = num_segments;
-}
+{ ADD_ELEMENT(Element::Circle, CircleArgs) { center.x, center.y, radius, col, thickness, num_segments }; }
 
 void VectorGraphics::AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments)
-{
-    ADD_ELEMENT(Element::CircleFilled, CircleFilledArgs);
-    info->CenterX = center.x;
-    info->CenterY = center.y;
-    info->Radius = radius;
-    info->Color = col;
-    info->Segments = num_segments;
-}
+{ ADD_ELEMENT(Element::CircleFilled, CircleFilledArgs) { center.x, center.y, radius, col, num_segments }; }
 
 void VectorGraphics::AddEllipse(const ImVec2& center, const ImVec2& radius, ImU32 col, float rot, float thickness, int num_segments)
-{
-    ADD_ELEMENT(Element::Ellipse, EllipseArgs);
-    info->CenterX = center.x;
-    info->CenterY = center.y;
-    info->RadiusX = radius.x;
-    info->RadiusY = radius.y;
-    info->Rotation = rot;
-    info->Color = col;
-    info->Thinkness = thickness;
-    info->Segments = num_segments;
-}
+{ ADD_ELEMENT(Element::Ellipse, EllipseArgs) { center.x, center.y, radius.x, radius.y, rot, col, thickness, num_segments }; }
 
 void VectorGraphics::AddEllipseFilled(const ImVec2& center, const ImVec2& radius, ImU32 col, float rot, int num_segments)
-{
-    ADD_ELEMENT(Element::Ellipsefilled, EllipseFilledArgs);
-    info->CenterX = center.x;
-    info->CenterY = center.y;
-    info->RadiusX = radius.x;
-    info->RadiusY = radius.y;
-    info->Rotation = rot;
-    info->Color = col;
-    info->Segments = num_segments;
-
-}
+{ ADD_ELEMENT(Element::Ellipsefilled, EllipseFilledArgs) { center.x, center.y, radius.x, radius.y, rot, col, num_segments }; }
 
 void VectorGraphics::Show(const ImVec2& size) const
 {

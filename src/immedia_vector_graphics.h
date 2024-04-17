@@ -15,7 +15,7 @@ public:
     
     ImVec2 GetSize() const;
 
-    void AddLine      (const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 0.0f);
+    void AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 0.0f);
 
     void AddRect      (const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 0.0f, float rounding = 0.0f, ImDrawFlags flags = 0);
     void AddRectFilled(const ImVec2& p1, const ImVec2& p2, ImU32 col,                         float rounding = 0.0f, ImDrawFlags flags = 0);
