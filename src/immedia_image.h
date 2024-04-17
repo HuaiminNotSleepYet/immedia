@@ -1,3 +1,23 @@
+// immedia_image.h
+//
+// Image loading library for imgui (https://github.com/ocornut/imgui).
+//
+//
+// Note: The lifecycle of ImMedia::Image must be between ImMedia::CreateContext() and ImMedia::DestoryContext().
+//
+//   ImMedia::CreateContext();
+//   {
+//       // ...
+//       ImMedia::Image img("filename");
+//       // ...
+//   } // The life cycle of img ends here.
+//   ImMedia::DestoryContext();
+//
+//
+// About the pointer:
+//   If there is no [nullable] tag, all pointer parameter and return value should not be nullptr.
+// 
+
 #ifndef IMMEDIA_IMAGE_H
 #define IMMEDIA_IMAGE_H
 

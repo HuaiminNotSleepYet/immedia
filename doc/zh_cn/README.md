@@ -7,7 +7,6 @@
 
 ```cpp
 #include ...
-#include "immeida.h"
 #include "immeida_image.h"
 #include "immeida_decoder_stb.h"
 #include "immeida_renderer_sdl2.h"
@@ -21,7 +20,7 @@ int main(int argc, char** argv)
     ImMedia_DecoderStb_Install(DecoderSTBFormat::PNG);
     ImMedia_RendererSDL2_Install();
 
-    { // 注意: ImMedia 对象的生命周期必须处在 ImMedia::CreateContext() 与 ImMedia::DestoryContext() 之间
+    { // 注意: ImMedia::Image 生命周期必须处在 ImMedia::CreateContext() 与 ImMedia::DestoryContext() 之间
         ImMedia::Image image("./img.png");
         while(true) // 事件循环
         {
