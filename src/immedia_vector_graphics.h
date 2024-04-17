@@ -26,6 +26,9 @@ public:
     void AddEllipse      (const ImVec2& center, const ImVec2& radius, ImU32 col, float thickness = 0.0f, float rot = 0.0f, int num_segments = 0);
     void AddEllipseFilled(const ImVec2& center, const ImVec2& radius, ImU32 col,                         float rot = 0.0f, int num_segments = 0);
 
+    void AddBezierCubic    (const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness = 0.0f, int num_segments = 0);
+    void AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3,                   ImU32 col, float thickness = 0.0f, int num_segments = 0);
+
     void AddPolyline     (const ImVec2* points, int num_points, ImU32 col, float thickness = 0.0f, ImDrawFlags flags = 0);
     void AddPolygonFilled(const ImVec2* points, int num_points, ImU32 col, bool convex);
 

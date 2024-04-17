@@ -82,6 +82,34 @@ struct EllipseFilledArgs
     int   Segments;
 };
 
+struct BezierCubicArgs
+{
+    float P1X;
+    float P1Y;
+    float P2X;
+    float P2Y;
+    float P3X;
+    float P3Y;
+    float P4X;
+    float P4Y;
+    ImU32 Color;
+    float Thinkness;
+    int   Segments;
+};
+
+struct BezierQuadraticArgs
+{
+    float P1X;
+    float P1Y;
+    float P2X;
+    float P2Y;
+    float P3X;
+    float P3Y;
+    ImU32 Color;
+    float Thinkness;
+    int   Segments;
+};
+
 struct PolylineArgs
 {
     ImVec2* Points;
@@ -115,15 +143,17 @@ struct PolygonArgs
 
 enum class Element : int
 {
-    Line          = ELEMENT_INFO(1, sizeof(LineArgs)         ),
-    Rect          = ELEMENT_INFO(2, sizeof(RectArgs)         ),
-    RectFilled    = ELEMENT_INFO(3, sizeof(RectFilledArgs)   ),
-    Circle        = ELEMENT_INFO(4, sizeof(CircleArgs)       ),
-    CircleFilled  = ELEMENT_INFO(5, sizeof(CircleFilledArgs) ),
-    Ellipse       = ELEMENT_INFO(6, sizeof(EllipseArgs)      ),
-    Ellipsefilled = ELEMENT_INFO(7, sizeof(EllipseFilledArgs)),
-    Polyline      = ELEMENT_INFO(8, 0                        ),
-    Polygon       = ELEMENT_INFO(9, 0                        ),
+    Line            = ELEMENT_INFO( 1, sizeof(LineArgs)           ),
+    Rect            = ELEMENT_INFO( 2, sizeof(RectArgs)           ),
+    RectFilled      = ELEMENT_INFO( 3, sizeof(RectFilledArgs)     ),
+    Circle          = ELEMENT_INFO( 4, sizeof(CircleArgs)         ),
+    CircleFilled    = ELEMENT_INFO( 5, sizeof(CircleFilledArgs)   ),
+    Ellipse         = ELEMENT_INFO( 6, sizeof(EllipseArgs)        ),
+    Ellipsefilled   = ELEMENT_INFO( 7, sizeof(EllipseFilledArgs)  ),
+    BezierCubic     = ELEMENT_INFO( 8, sizeof(BezierCubicArgs)    ),
+    BezierQuadratic = ELEMENT_INFO( 9, sizeof(BezierQuadraticArgs)),
+    Polyline        = ELEMENT_INFO(10, 0                          ),
+    Polygon         = ELEMENT_INFO(11, 0                          ),
 };
 
 VectorGraphics::VectorGraphics(const ImVec2& size) :
@@ -163,6 +193,12 @@ void VectorGraphics::AddEllipse(const ImVec2& center, const ImVec2& radius, ImU3
 
 void VectorGraphics::AddEllipseFilled(const ImVec2& center, const ImVec2& radius, ImU32 col, float rot, int num_segments)
 { ADD_ELEMENT(Element::Ellipsefilled, EllipseFilledArgs) { center.x, center.y, radius.x, radius.y, rot, col, num_segments }; }
+
+void VectorGraphics::AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col, float thickness, int num_segments)
+{ ADD_ELEMENT(Element::BezierCubic, BezierCubicArgs) { p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, col, thickness, num_segments }; }
+
+void VectorGraphics::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness, int num_segments)
+{ ADD_ELEMENT(Element::BezierQuadratic, BezierQuadraticArgs) { p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, col, thickness, num_segments }; }
 
 void VectorGraphics::AddPolyline(const ImVec2* points, int num_points, ImU32 col, float thickness, ImDrawFlags flags)
 {
@@ -220,6 +256,7 @@ void VectorGraphics::Show(const ImVec2& size) const
     while (element < element_end)
     {
         int args_size = ELEMENT_ARGS_SIZE(*element);
+
         switch (*element)
         {
         case Element::Line:
@@ -290,6 +327,29 @@ void VectorGraphics::Show(const ImVec2& size) const
                                         args->Color,
                                         args->Rotation,
                                         args->Segments);
+            break;
+        }
+        case Element::BezierCubic:
+        {
+            const BezierCubicArgs* args = reinterpret_cast<const BezierCubicArgs*>(element_args);
+            draw_list->AddBezierCubic(pos + offset + ImVec2(args->P1X, args->P1Y) * scale,
+                                      pos + offset + ImVec2(args->P2X, args->P2Y) * scale,
+                                      pos + offset + ImVec2(args->P3X, args->P3Y) * scale,
+                                      pos + offset + ImVec2(args->P4X, args->P4Y) * scale,
+                                      args->Color,
+                                      args->Thinkness == 0 ? 1 : args->Thinkness * scale,
+                                      args->Segments);
+            break;
+        }
+        case Element::BezierQuadratic:
+        {
+            const BezierQuadraticArgs* args = reinterpret_cast<const BezierQuadraticArgs*>(element_args);
+            draw_list->AddBezierQuadratic(pos + offset + ImVec2(args->P1X, args->P1Y) * scale,
+                                          pos + offset + ImVec2(args->P2X, args->P2Y) * scale,
+                                          pos + offset + ImVec2(args->P3X, args->P3Y) * scale,
+                                          args->Color,
+                                          args->Thinkness == 0 ? 1 : args->Thinkness * scale,
+                                          args->Segments);
             break;
         }
         case Element::Polyline:
