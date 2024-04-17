@@ -91,9 +91,8 @@ struct ImageRenderer
     void  (*WriteFrame)(void* context, const uint8_t* pixels);
 
     /// @brief Get current texture.
-    /// @param context [nullable] Renderer context.
+    /// @param context Renderer context.
     /// @return ImTextureID of current frame, the value may be different for each call.
-    ///         Return invalid texture for current renderer if context is null.
     ImTextureID (*GetTexture)(void* context);
 };
 

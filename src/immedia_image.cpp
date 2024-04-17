@@ -25,9 +25,12 @@ struct ImMediaContext
     ImageRenderer              ImageRenderer;
     bool                       InstallImageRenderer;
 
+    Image*                     EmptyImage;
+
     ImMediaContext() :
         ImageRenderer({ nullptr, nullptr,nullptr,nullptr }),
-        InstallImageRenderer(false)
+        InstallImageRenderer(false),
+        EmptyImage(nullptr)
     {
 
     }
@@ -47,6 +50,8 @@ void DestoryContext()
     assert(g_context);
     for (size_t i = 0; i < g_context->ImageDecoders.size(); ++i)
         delete(g_context->ImageDecoders[i].Format);
+    if (g_context->EmptyImage)
+        delete g_context->EmptyImage;
     delete g_context;
 }
 
@@ -99,6 +104,8 @@ void InstallImageRenderer(const ImageRenderer& renderer)
     assert(renderer.WriteFrame);
     g_context->ImageRenderer = renderer;
     g_context->InstallImageRenderer = true;
+    uint8_t pixels[] = { 0x00, 0x00, 0x00, 0x00 };
+    g_context->EmptyImage = new Image(1, 1, PixelFormat::RGBA8888, pixels);
 }
 
 const ImageRenderer* GetImageRenderer()
@@ -163,6 +170,8 @@ int Image::GetHeight() const
 
 ImTextureID Image::GetTexture() const
 {
+    if (!RendererContext)
+        return g_context->EmptyImage->GetTexture();
     Play();
     return GetImageRenderer()->GetTexture(RendererContext);
 }
