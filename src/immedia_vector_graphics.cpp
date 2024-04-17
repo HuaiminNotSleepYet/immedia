@@ -40,6 +40,25 @@ struct RectFilledArgs
     ImDrawFlags Flags;
 };
 
+struct CircleArgs
+{
+    float CenterX;
+    float CenterY;
+    float Radius;
+    ImU32 Color;
+    float Thinkness;
+    int   Segments;
+};
+
+struct CircleFilledArgs
+{
+    float CenterX;
+    float CenterY;
+    float Radius;
+    ImU32 Color;
+    int   Segments;
+};
+
 // The structure of VectorGraphicsElement
 // | 0 - 16           | 16 - 32 |
 // | args struct size | id      |
@@ -50,9 +69,11 @@ struct RectFilledArgs
 
 enum class Element : int
 {
-    Line       = ELEMENT_INFO(1, LineArgs      ),
-    Rect       = ELEMENT_INFO(2, RectArgs      ),
-    RectFilled = ELEMENT_INFO(3, RectFilledArgs)
+    Line         = ELEMENT_INFO(1, LineArgs        ),
+    Rect         = ELEMENT_INFO(2, RectArgs        ),
+    RectFilled   = ELEMENT_INFO(3, RectFilledArgs  ),
+    Circle       = ELEMENT_INFO(4, CircleArgs      ),
+    CircleFilled = ELEMENT_INFO(5, CircleFilledArgs)
 };
 
 VectorGraphics::VectorGraphics(const ImVec2& size) :
@@ -108,6 +129,27 @@ void VectorGraphics::AddRectFilled(const ImVec2& p1, const ImVec2& p2, ImU32 col
     info->Flags = flags;
 }
 
+void VectorGraphics::AddCircle(const ImVec2& center, float radius, ImU32 col, float thickness, int num_segments)
+{
+    ADD_ELEMENT(Element::Circle, CircleArgs);
+    info->CenterX = center.x;
+    info->CenterY = center.y;
+    info->Radius = radius;
+    info->Color = col;
+    info->Thinkness = thickness;
+    info->Segments = num_segments;
+}
+
+void VectorGraphics::AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments)
+{
+    ADD_ELEMENT(Element::CircleFilled, CircleFilledArgs);
+    info->CenterX = center.x;
+    info->CenterY = center.y;
+    info->Radius = radius;
+    info->Color = col;
+    info->Segments = num_segments;
+}
+
 void VectorGraphics::Show(const ImVec2& size) const
 {
     ImGuiWindow* window = ImGui::GetCurrentWindow();
@@ -154,7 +196,6 @@ void VectorGraphics::Show(const ImVec2& size) const
                                args->Thinkness == 0 ? 1 : args->Thinkness * scale);
             break;
         }
-
         case Element::RectFilled:
         {
             const RectFilledArgs* args = reinterpret_cast<const RectFilledArgs*>(element_info);
@@ -165,7 +206,25 @@ void VectorGraphics::Show(const ImVec2& size) const
                                      args->Flags);
             break;
         }
-
+        case Element::Circle:
+        {
+            const CircleArgs* args = reinterpret_cast<const CircleArgs*>(element_info);
+            draw_list->AddCircle(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
+                                 args->Radius * scale,
+                                 args->Color,
+                                 args->Segments,
+                                 args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+            break;
+        }
+        case Element::CircleFilled:
+        {
+            const CircleFilledArgs* args = reinterpret_cast<const CircleFilledArgs*>(element_info);
+            draw_list->AddCircleFilled(pos + offset + ImVec2(args->CenterX, args->CenterY) * scale,
+                                       args->Radius * scale,
+                                       args->Color,
+                                       args->Segments);
+            break;
+        }
         default:
             break;
         }
