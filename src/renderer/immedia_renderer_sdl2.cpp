@@ -8,13 +8,7 @@ static SDL_Renderer* GRenderer = nullptr;
 
 static void* CreateContext(int width, int height, ImMedia::PixelFormat format, bool has_anim)
 {
-    bool has_alpha = false;
-    switch(format)
-    {
-    case ImMedia::PixelFormat::RGB888:   has_alpha = false; break;
-    case ImMedia::PixelFormat::RGBA8888: has_alpha = true;  break;
-    default: IM_ASSERT(false); break;
-    };
+    bool has_alpha = PIXEL_FORMAT_HAS_ALPHA(format);
     SDL_Texture* texture = SDL_CreateTexture(GRenderer,
                                              has_alpha ? SDL_PIXELFORMAT_ABGR8888 : SDL_PIXELFORMAT_BGR888,
                                              has_anim ? SDL_TEXTUREACCESS_STREAMING : SDL_TEXTUREACCESS_STATIC,

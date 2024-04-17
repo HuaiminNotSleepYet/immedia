@@ -27,13 +27,23 @@
 
 namespace ImMedia {
 
-enum class PixelFormat
-{
-    RGB888   = 0x003,
-    RGBA8888 = 0x104
+// The structure of pixelformat:
+// | 0   -   15 | 16    | 17  -  32 |
+// | pixel size | alpha | format id |
+
+#define PIXEL_FORMAT_INFO(ID, HAS_ALPHA, SIZE) \
+    ((0xFF & ID       ) << 9)\
+  | ((0x01 & HAS_ALPHA) << 8)\
+  | ((0xFF & SIZE))
+
+enum class PixelFormat : int
+{                            // | ID | alpha | size |
+    RGB888   = PIXEL_FORMAT_INFO( 1,   0,      3    ),
+    RGBA8888 = PIXEL_FORMAT_INFO( 2,   1,      4    ),
 };
 
-static int PixelSize(PixelFormat format) { return (int)format & 0xFF; }
+#define PIXEL_FORMAT_SIZE(PIXEL_FORMAT)      (int)PIXEL_FORMAT & 0x0FF
+#define PIXEL_FORMAT_HAS_ALPHA(PIXEL_FORMAT) (int)PIXEL_FORMAT & 0x100
 
 struct ImageDecoder
 {
