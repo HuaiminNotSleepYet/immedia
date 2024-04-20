@@ -143,6 +143,11 @@ public:
     int GetWidth()  const;
     int GetHeight() const;
 
+    bool HasAnimation() const;
+
+    /// @brief Get current ImTextureID.
+    /// @return For non-animation image, the ImTextureID keep valid until destroyed.
+    ///         For animation image, the ImTextureID may changed when each called.
     ImTextureID GetTexture() const;
 
     /// @brief Call it to keep animation playing without call \ref Show.
@@ -157,8 +162,9 @@ public:
               const ImVec4& border_col = ImVec4(0, 0, 0, 0)) const;
 
 private:
-    int                 Width  = 0;
-    int                 Height = 0;
+    int                 Width   = 0;
+    int                 Height  = 0;
+    bool                HasAnim = false;
 
     size_t              NextFrameTime = 0;
 

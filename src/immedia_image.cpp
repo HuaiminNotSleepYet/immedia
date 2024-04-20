@@ -168,6 +168,11 @@ int Image::GetHeight() const
     return Height;
 }
 
+bool Image::HasAnimation() const
+{
+    return HasAnim;
+}
+
 ImTextureID Image::GetTexture() const
 {
     if (!RendererContext)
@@ -325,9 +330,10 @@ void Image::Load(void* decoder_context, const ImageDecoder* decoder)
     PixelFormat format;
     int         framt_count;
     decoder->GetInfo(decoder_context, &Width, &Height, &format, &framt_count);
+    HasAnim = framt_count > 0;
     Decoder          = decoder;
     DecoderContext  = decoder_context;
-    RendererContext = GetImageRenderer()->CreateContext(Width, Height, format, framt_count != 0);
+    RendererContext = GetImageRenderer()->CreateContext(Width, Height, format, HasAnim);
     Play();
 }
 
