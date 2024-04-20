@@ -1,8 +1,6 @@
 #ifndef IMMEDIA_VECTOR_GRAPHICS_H
 #define IMMEDIA_VECTOR_GRAPHICS_H
 
-#include <stdint.h>
-
 #include "imgui.h"
 
 namespace ImMedia {
@@ -11,7 +9,12 @@ class VectorGraphics
 {
 public:
     VectorGraphics(const ImVec2& size);
-    ~VectorGraphics() {};
+    ~VectorGraphics();
+
+    VectorGraphics(const VectorGraphics&);
+    VectorGraphics& operator=(const VectorGraphics&);
+    VectorGraphics(VectorGraphics&&) = default;
+    VectorGraphics& operator=(VectorGraphics&&) = default;
 
     ImVec2 GetSize() const;
 
@@ -35,10 +38,59 @@ public:
     void Show(const ImVec2& size) const;
     void Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2& p2) const;
 
+public:
+    struct LineArgs            { ImVec2 P1; ImVec2 P2; ImU32 Color; float Thinkness; };
+    struct RectArgs            { ImVec2 P1; ImVec2 P2; ImU32 Color; float Thinkness; float Rounding; ImDrawFlags Flags; };
+    struct RectFilledArgs      { ImVec2 P1; ImVec2 P2; ImU32 Color; float Rounding; ImDrawFlags Flags; };
+    struct CircleArgs          { ImVec2 Center; float Radius; ImU32 Color; float Thinkness; int Segments; };
+    struct CircleFilledArgs    { ImVec2 Center; float  Radius; ImU32  Color; int    Segments; };
+    struct EllipseArgs         { ImVec2 Center; ImVec2 Radius; float Rotation; ImU32 Color; float Thinkness; int Segments; };
+    struct EllipseFilledArgs   { ImVec2 Center; ImVec2 Radius; float Rotation; ImU32 Color; int Segments; };
+    struct BezierCubicArgs     { ImVec2 P1; ImVec2 P2; ImVec2 P3; ImVec2 P4; ImU32 Color; float Thinkness; int Segments; };
+    struct BezierQuadraticArgs { ImVec2 P1; ImVec2 P2; ImVec2 P3; ImU32 Color; float Thinkness; int Segments; };
+    struct PolylineArgs        { ImVector<ImVec2> Points; ImU32 Color; float Thinkness; ImDrawFlags Flags; };
+    struct PolygonFilledArgs   { ImVector<ImVec2> Points; ImU32 Color; };
+
+    enum ElementType
+    {
+        Line,
+        Rect,
+        RectFilled,
+        Circle,
+        CircleFilled,
+        Ellipse,
+        EllipseFilled,
+        BezierCubic,
+        BezierQuadratic,
+        Polyline,
+        PolygonFilled
+    };
+
+    class Element
+    {
+        friend VectorGraphics;
+
+    public:
+        ElementType GetType() const { return Type; }
+
+        template<typename T>       T* GetArgs()       { return reinterpret_cast<T*>(Args); }
+        template<typename T> const T* GetArgs() const { return reinterpret_cast<T*>(Args); }
+
+    private:
+        ElementType Type;
+        void*       Args;
+
+        Element(ElementType type, void* args) : Type(type), Args(args) {};
+    };
+
+    Element* begin();
+    Element* end();
+    const Element* begin() const;
+    const Element* end() const;
+
 private:
     ImVec2            Size;
-    ImVector<int>     Elements;
-    ImVector<uint8_t> ElementArgs;
+    ImVector<Element> Elements;
 
     ImVector<ImVec2>  PointBuffer;
 };
