@@ -59,6 +59,8 @@ VectorGraphics& VectorGraphics::operator=(const VectorGraphics& other)
         COPY_ELEMENT(ElementType::BezierQuadratic, BezierQuadraticArgs);
         COPY_ELEMENT(ElementType::Polyline,        PolylineArgs       );
         COPY_ELEMENT(ElementType::PolygonFilled,   PolygonFilledArgs  );
+        COPY_ELEMENT(ElementType::Text,            TextArgs           );
+        COPY_ELEMENT(ElementType::Texture,         TextureArgs        );
         default:
             break;
         }
@@ -118,6 +120,27 @@ void VectorGraphics::AddPolygonFilled(const ImVec2* points, int num_points, ImU3
     memcpy(args->Points.Data, points, sizeof(ImVec2) * num_points);
     Elements.push_back(Element(ElementType::PolygonFilled, args));
 }
+
+void VectorGraphics::AddText(const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end)
+{
+    AddText(nullptr, 0.0f, pos, col, text_begin, text_end); 
+}
+
+void VectorGraphics::AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
+{
+    TextArgs* args = new TextArgs{ pos, col, {}, font, font_size, wrap_width, {}, cpu_fine_clip_rect != nullptr };
+    size_t text_len = text_end
+        ? text_end - text_begin
+        : strlen(text_begin);
+    args->Text.resize(text_len);
+    memcpy(args->Text.Data, text_begin, text_len);
+    if (cpu_fine_clip_rect)
+        args->ClipRect = *cpu_fine_clip_rect;
+    Elements.push_back(Element(ElementType::Text, args));
+}
+
+void VectorGraphics::AddTexture(ImTextureID texture, const ImVec2& p1, const ImVec2& p2, const ImVec2& uv1, const ImVec2& uv2, ImU32 col)
+{ ADD_ELEMENT(ElementType::Texture, TextureArgs) { texture, p1, p2, uv1, uv2, col }; }
 
 void VectorGraphics::Show(const ImVec2& size) const
 {
@@ -264,6 +287,36 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
             for (size_t i = 0; i < args->Points.size(); i++)
                 p->PointBuffer[i] = offset + args->Points[i] * scale;
             draw_list->AddConvexPolyFilled(PointBuffer.Data, args->Points.size(), args->Color);
+            break;
+        }
+        case ElementType::Text:
+        {
+            const TextArgs* args = element->GetArgs<TextArgs>();
+            ImVec4 clip_rect = args->ClipRect;
+            if (args->UseClip)
+            {
+                clip_rect.x = offset.x + clip_rect.x * scale;
+                clip_rect.y = offset.y + clip_rect.y * scale;
+                clip_rect.z = offset.x + clip_rect.z * scale;
+                clip_rect.w = offset.y + clip_rect.w * scale;
+            }
+            draw_list->AddText(args->Font, args->FontSize * scale,
+                               offset + args->Position * scale, args->Color,
+                               args->Text.begin(), args->Text.end(),
+                               args->WrapWidth * scale,
+                               args->UseClip ? &clip_rect : nullptr);
+            break;
+        }
+        case ElementType::Texture:
+        {
+            const TextureArgs* args = element->GetArgs<TextureArgs>();
+            draw_list->AddImage(args->Texture,
+                                offset + args->P1 * scale,
+                                offset + args->P2 * scale,
+                                args->UV1,
+                                args->UV2,
+                                args->Color);
+            break;
         }
         default:
             break;
