@@ -8,7 +8,7 @@ namespace ImMedia {
 class VectorGraphics
 {
 public:
-    VectorGraphics(const ImVec2& size);
+    VectorGraphics(float width, float height);
     ~VectorGraphics();
 
     VectorGraphics(const VectorGraphics&);
@@ -16,6 +16,8 @@ public:
     VectorGraphics(VectorGraphics&&) = default;
     VectorGraphics& operator=(VectorGraphics&&) = default;
 
+    float GetWidth() const;
+    float GetHeight() const;
     ImVec2 GetSize() const;
 
     void AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 0.0f);
@@ -92,6 +94,7 @@ public:
 
 private:
     ImVec2            Size;
+
     ImVector<Element> Elements;
 
     ImVector<ImVec2>  PointBuffer;

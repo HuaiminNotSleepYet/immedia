@@ -140,8 +140,9 @@ public:
     Image(Image&&) = default;
     Image& operator=(Image&&) = default;
 
-    int GetWidth()  const;
+    int GetWidth() const;
     int GetHeight() const;
+    ImVec2 GetSize() const;
 
     bool HasAnimation() const;
 

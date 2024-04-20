@@ -7,10 +7,11 @@
 
 namespace ImMedia {
 
-VectorGraphics::VectorGraphics(const ImVec2& size) :
-    Size(size)
+VectorGraphics::VectorGraphics(float width, float height) :
+    Size(width, height)
 {
-
+    assert(width > 0);
+    assert(height > 0);
 }
 
 VectorGraphics::~VectorGraphics()
@@ -67,6 +68,16 @@ VectorGraphics& VectorGraphics::operator=(const VectorGraphics& other)
         ++element;
     }
     return *this;
+}
+
+float VectorGraphics::GetWidth() const
+{
+    return Size.x;
+}
+
+float VectorGraphics::GetHeight() const
+{
+    return Size.y;
 }
 
 ImVec2 VectorGraphics::GetSize() const

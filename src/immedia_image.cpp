@@ -168,6 +168,11 @@ int Image::GetHeight() const
     return Height;
 }
 
+ImVec2 Image::GetSize() const
+{
+    return ImVec2(Width, Height);
+}
+
 bool Image::HasAnimation() const
 {
     return HasAnim;
