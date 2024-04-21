@@ -314,7 +314,7 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
                 clip_rect.w = offset.y + clip_rect.w * scale;
             }
             draw_list->AddText(args->Font,
-                               args->FontSize * scale,
+                               args->FontSize == 0 ? ImGui::GetDrawListSharedData()->FontSize : args->FontSize * scale,
                                RESIZE_POINT(args->Position),
                                args->Color,
                                args->Text.begin(), args->Text.end(),
