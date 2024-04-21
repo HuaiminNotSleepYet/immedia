@@ -169,13 +169,18 @@ void VectorGraphics::Show(const ImVec2& size) const
     Draw(window->DrawList, bb.Min, bb.Max);
 }
 
+#define RESIZE_ARGS(OFFSET, SCALE) \
+    const ImVec2& resize_offset = OFFSET;\
+    const float& resize_scale = SCALE
+#define RESIZE_POINT(POINT) resize_offset + POINT * resize_scale
+#define RESIZE_THINKNESS(THINKNESS) THINKNESS == 0 ? 1 : THINKNESS * resize_scale
+
 void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2& p2) const
 {
     const ImVec2 size = p2 - p1;
     const double scale = fmin(size.x / Size.x, size.y / Size.y);
     const ImVec2 offset = ImVec2((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2) + p1;
-#define RESIZE_POINT(POINT) offset + POINT * scale
-#define RESIZE_THINKNESS(THINKNESS) THINKNESS == 0 ? 1 : THINKNESS * scale
+    RESIZE_ARGS(offset, scale);
 
     VectorGraphics* p = const_cast<VectorGraphics*>(this);
     const Element* element     = begin();
@@ -354,6 +359,219 @@ bool VGButton(const VectorGraphics& vg, const ImVec2& size)
     bool pressed = ImGui::Button("##", size);
     vg.Draw(window->DrawList, ImGui::GetItemRectMin() + padding, ImGui::GetItemRectMax() - padding);
     return pressed;
+}
+
+void ShowVGInfoWindow(const char* name, const VectorGraphics& vg, bool* p_open)
+{
+    const static ImU32 highlight_color = IM_COL32(255, 255, 0, 255);
+
+    ImGui::PushID(&vg);
+
+    ImGui::Begin(name, p_open);
+
+    const ImVec2 win_pos = ImGui::GetWindowPos();
+    const ImVec2 win_min = ImGui::GetWindowContentRegionMin();
+    const ImVec2 win_max = ImGui::GetWindowContentRegionMax();
+    const ImVec2 win_size =  win_max - win_min;
+
+    vg.Show({ win_size.x < 256 ? 256 : win_size.x, 256 });
+    const ImVec2 item_min = ImGui::GetItemRectMin();
+    const ImVec2 item_max = ImGui::GetItemRectMax();
+    const ImVec2 item_size = item_max - item_min;
+    const double scale = fmin(item_size.x / vg.GetWidth(), item_size.y / vg.GetHeight());
+    const ImVec2 item_offset = ImVec2((item_size.x - vg.GetWidth() * scale) / 2, (item_size.y - vg.GetHeight() * scale) / 2) + item_min;
+    RESIZE_ARGS(item_offset, scale);
+
+    ImGui::SeparatorText("Basic info");
+
+    ImGui::Text("Size: %.3f x %.3f", vg.GetWidth(), vg.GetHeight());
+    ImGui::Text("Element count: %d", vg.end() - vg.begin());
+
+    ImGui::SeparatorText("Elements");
+
+    const ImMedia::VectorGraphics::Element* element       = vg.end() - 1;
+    const ImMedia::VectorGraphics::Element* element_begin = vg.begin() - 1;
+    ImDrawList* draw_list = ImGui::GetCurrentWindow()->DrawList;
+    VectorGraphics* p = const_cast<VectorGraphics*>(&vg);
+
+    ImGui::BeginChild("Elements");
+
+    while (element > element_begin)
+    {
+        ImGui::PushID(element);
+
+        const VectorGraphics::ElementType type = element->GetType();
+
+        switch (type)
+        {
+        case VectorGraphics::ElementType::Line:            ImGui::Text("[%03d] Line",            element - element_begin - 1); break;
+        case VectorGraphics::ElementType::Rect:            ImGui::Text("[%03d] Rect",            element - element_begin - 1); break;
+        case VectorGraphics::ElementType::RectFilled:      ImGui::Text("[%03d] RectFilled",      element - element_begin - 1); break;
+        case VectorGraphics::ElementType::Circle:          ImGui::Text("[%03d] Circle",          element - element_begin - 1); break;
+        case VectorGraphics::ElementType::CircleFilled:    ImGui::Text("[%03d] CircleFilled",    element - element_begin - 1); break;
+        case VectorGraphics::ElementType::Ellipse:         ImGui::Text("[%03d] Ellipse",         element - element_begin - 1); break;
+        case VectorGraphics::ElementType::EllipseFilled:   ImGui::Text("[%03d] EllipseFilled",   element - element_begin - 1); break;
+        case VectorGraphics::ElementType::BezierCubic:     ImGui::Text("[%03d] BezierCubic",     element - element_begin - 1); break;
+        case VectorGraphics::ElementType::BezierQuadratic: ImGui::Text("[%03d] BezierQuadratic", element - element_begin - 1); break; 
+        case VectorGraphics::ElementType::Polyline:        ImGui::Text("[%03d] Polyline",        element - element_begin - 1); break;
+        case VectorGraphics::ElementType::PolygonFilled:   ImGui::Text("[%03d] PolygonFilled",   element - element_begin - 1); break;
+        case VectorGraphics::ElementType::Text:            ImGui::Text("[%03d] Text",            element - element_begin - 1); break;
+        case VectorGraphics::ElementType::Texture:         ImGui::Text("[%03d] Texture",         element - element_begin - 1); break;
+        default: break;
+        }
+
+        if (ImGui::IsItemHovered())
+        {
+            switch (type)
+            {
+            case VectorGraphics::ElementType::Line:
+            {
+                const VectorGraphics::LineArgs* args = element->GetArgs<VectorGraphics::LineArgs>();
+                draw_list->AddLine(RESIZE_POINT(args->P1), RESIZE_POINT(args->P2), highlight_color, RESIZE_THINKNESS(args->Thinkness));
+                break;
+            }
+            case VectorGraphics::ElementType::Rect:
+            {
+                const VectorGraphics::RectArgs* args = element->GetArgs<VectorGraphics::RectArgs>();
+                draw_list->AddRect(RESIZE_POINT(args->P1), RESIZE_POINT(args->P2), highlight_color, 0, 0, RESIZE_THINKNESS(args->Thinkness));
+                break;
+            }
+            case VectorGraphics::ElementType::RectFilled:
+            {
+                const VectorGraphics::RectFilledArgs* args = element->GetArgs<VectorGraphics::RectFilledArgs>();
+                draw_list->AddRectFilled(RESIZE_POINT(args->P1), RESIZE_POINT(args->P2), highlight_color, args->Rounding * scale);
+                break;
+            }
+            case VectorGraphics::ElementType::Circle:
+            {
+                const VectorGraphics::CircleArgs* args = element->GetArgs<VectorGraphics::CircleArgs>();
+                draw_list->AddCircle(RESIZE_POINT(args->Center),
+                                     args->Radius * scale,
+                                     highlight_color,
+                                     args->Segments,
+                                     RESIZE_THINKNESS(args->Thinkness));
+                break;
+            }
+            case VectorGraphics::ElementType::CircleFilled:
+            {
+                const VectorGraphics::CircleFilledArgs* args = element->GetArgs<VectorGraphics::CircleFilledArgs>();
+                draw_list->AddCircleFilled(RESIZE_POINT(args->Center),
+                                           args->Radius * scale,
+                                           highlight_color,
+                                           args->Segments);
+                break;
+            }
+            case VectorGraphics::ElementType::Ellipse:
+            {
+                const VectorGraphics::EllipseArgs* args = element->GetArgs<VectorGraphics::EllipseArgs>();
+                draw_list->AddEllipse(RESIZE_POINT(args->Center),
+                                      args->Radius.x * scale,
+                                      args->Radius.y * scale,
+                                      highlight_color,
+                                      args->Rotation,
+                                      args->Segments,
+                                      RESIZE_THINKNESS(args->Thinkness));
+                break;
+            }
+            case VectorGraphics::ElementType::EllipseFilled:
+            {
+                const VectorGraphics::EllipseFilledArgs* args = element->GetArgs<VectorGraphics::EllipseFilledArgs>();
+                draw_list->AddEllipseFilled(RESIZE_POINT(args->Center),
+                                            args->Radius.x * scale,
+                                            args->Radius.y * scale,
+                                            highlight_color,
+                                            args->Rotation,
+                                            args->Segments);
+                break;
+            }
+            case VectorGraphics::ElementType::BezierCubic:
+            {
+                const VectorGraphics::BezierCubicArgs* args = element->GetArgs<VectorGraphics::BezierCubicArgs>();
+                draw_list->AddBezierCubic(RESIZE_POINT(args->P1),
+                                          RESIZE_POINT(args->P2),
+                                          RESIZE_POINT(args->P3),
+                                          RESIZE_POINT(args->P4),
+                                          highlight_color,
+                                          RESIZE_THINKNESS(args->Thinkness),
+                                          args->Segments);
+                break;
+            }
+            case VectorGraphics::ElementType::BezierQuadratic:
+            {
+                const VectorGraphics::BezierQuadraticArgs* args = element->GetArgs<VectorGraphics::BezierQuadraticArgs>();
+                draw_list->AddBezierQuadratic(RESIZE_POINT(args->P1),
+                                              RESIZE_POINT(args->P2),
+                                              RESIZE_POINT(args->P3),
+                                              highlight_color,
+                                              RESIZE_THINKNESS(args->Thinkness),
+                                              args->Segments);
+                break;
+            }
+            case VectorGraphics::ElementType::Polyline:
+            {
+                const VectorGraphics::PolylineArgs* args = element->GetArgs<VectorGraphics::PolylineArgs>();
+                for (size_t i = 0; i < args->Points.size(); ++i)
+                    p->PointBuffer[i] = RESIZE_POINT(args->Points[i]);
+                draw_list->AddPolyline(vg.PointBuffer.Data, args->Points.size(),
+                                       highlight_color,
+                                       args->Flags,
+                                       RESIZE_THINKNESS(args->Thinkness));
+                break;
+            }
+            case VectorGraphics::ElementType::PolygonFilled:
+            {
+                const VectorGraphics::PolygonFilledArgs* args = element->GetArgs<VectorGraphics::PolygonFilledArgs>();
+                for (size_t i = 0; i < args->Points.size(); i++)
+                    p->PointBuffer[i] = RESIZE_POINT(args->Points[i]);
+                draw_list->AddConvexPolyFilled(vg.PointBuffer.Data, args->Points.size(), highlight_color);
+                break;
+            }
+            case VectorGraphics::ElementType::Text:
+            {
+                const VectorGraphics::TextArgs* args = element->GetArgs<VectorGraphics::TextArgs>();
+                ImVec4 clip_rect = args->ClipRect;
+                if (args->UseClip)
+                {
+                    clip_rect.x = item_offset.x + clip_rect.x * scale;
+                    clip_rect.y = item_offset.y + clip_rect.y * scale;
+                    clip_rect.z = item_offset.x + clip_rect.z * scale;
+                    clip_rect.w = item_offset.y + clip_rect.w * scale;
+                }
+                draw_list->AddText(args->Font,
+                                   args->FontSize == 0 ? ImGui::GetDrawListSharedData()->FontSize : args->FontSize * scale,
+                                   RESIZE_POINT(args->Position),
+                                   highlight_color,
+                                   args->Text.begin(), args->Text.end(),
+                                   args->WrapWidth * scale,
+                                   args->UseClip ? &clip_rect : nullptr);
+                break;
+            }
+            case VectorGraphics::ElementType::Texture:
+            {
+                const VectorGraphics::TextureArgs* args = element->GetArgs<VectorGraphics::TextureArgs>();
+                draw_list->AddImage(args->Texture,
+                                    RESIZE_POINT(args->P1),
+                                    RESIZE_POINT(args->P2),
+                                    args->UV1,
+                                    args->UV2,
+                                    args->Color);
+                draw_list->AddRect(RESIZE_POINT(args->P1), RESIZE_POINT(args->P2), highlight_color, 0, 0, 1);
+                break;
+            }
+            default: break;
+            }
+        }
+
+        ImGui::PopID();
+        --element;
+    }
+    
+
+    ImGui::EndChild();
+
+    ImGui::End();
+
+    ImGui::PopID();
 }
 
 }

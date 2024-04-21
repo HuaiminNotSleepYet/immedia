@@ -98,9 +98,13 @@ private:
     ImVector<Element> Elements;
 
     ImVector<ImVec2>  PointBuffer;
+
+    friend void ShowVGInfoWindow(const char*, const VectorGraphics&, bool*);
 };
 
 bool VGButton(const VectorGraphics& vg, const ImVec2& size);
+
+void ShowVGInfoWindow(const char* name, const VectorGraphics& vg, bool* p_open = nullptr);
 
 }
 
