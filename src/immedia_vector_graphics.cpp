@@ -172,8 +172,10 @@ void VectorGraphics::Show(const ImVec2& size) const
 void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2& p2) const
 {
     const ImVec2 size = p2 - p1;
-    double scale = fmin(size.x / Size.x, size.y / Size.y);
-    ImVec2 offset = ImVec2((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2) + p1;
+    const double scale = fmin(size.x / Size.x, size.y / Size.y);
+    const ImVec2 offset = ImVec2((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2) + p1;
+#define RESIZE_POINT(POINT) offset + POINT * scale
+#define RESIZE_THINKNESS(THINKNESS) THINKNESS == 0 ? 1 : THINKNESS * scale
 
     VectorGraphics* p = const_cast<VectorGraphics*>(this);
     const Element* element     = begin();
@@ -185,28 +187,28 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
         case ElementType::Line:
         {
             const LineArgs* args = element->GetArgs<LineArgs>();
-            draw_list->AddLine(offset + args->P1 * scale,
-                               offset + args->P2 * scale,
+            draw_list->AddLine(RESIZE_POINT(args->P1),
+                               RESIZE_POINT(args->P2),
                                args->Color,
-                               args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+                               RESIZE_THINKNESS(args->Thinkness));
             break;
         }
         case ElementType::Rect:
         {
             const RectArgs* args = element->GetArgs<RectArgs>();
-            draw_list->AddRect(offset + args->P1 * scale,
-                               offset + args->P2 * scale,
+            draw_list->AddRect(RESIZE_POINT(args->P1),
+                               RESIZE_POINT(args->P2),
                                args->Color,
                                args->Rounding * scale,
                                args->Flags,
-                               args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+                               RESIZE_THINKNESS(args->Thinkness));
             break;
         }
         case ElementType::RectFilled:
         {
             const RectFilledArgs* args = element->GetArgs<RectFilledArgs>();
-            draw_list->AddRectFilled(offset + args->P1 * scale,
-                                     offset + args->P2 * scale,
+            draw_list->AddRectFilled(RESIZE_POINT(args->P1),
+                                     RESIZE_POINT(args->P2),
                                      args->Color,
                                      args->Rounding * scale,
                                      args->Flags);
@@ -215,17 +217,17 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
         case ElementType::Circle:
         {
             const CircleArgs* args = element->GetArgs<CircleArgs>();
-            draw_list->AddCircle(offset + args->Center * scale,
-                args->Radius * scale,
-                args->Color,
-                args->Segments,
-                args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+            draw_list->AddCircle(RESIZE_POINT(args->Center),
+                                 args->Radius * scale,
+                                 args->Color,
+                                 args->Segments,
+                                 RESIZE_THINKNESS(args->Thinkness));
             break;
         }
         case ElementType::CircleFilled:
         {
             const CircleFilledArgs* args = element->GetArgs<CircleFilledArgs>();
-            draw_list->AddCircleFilled(offset + args->Center * scale,
+            draw_list->AddCircleFilled(RESIZE_POINT(args->Center),
                                        args->Radius * scale,
                                        args->Color,
                                        args->Segments);
@@ -234,19 +236,19 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
         case ElementType::Ellipse:
         {
             const EllipseArgs* args = element->GetArgs<EllipseArgs>();
-            draw_list->AddEllipse(offset + args->Center * scale,
+            draw_list->AddEllipse(RESIZE_POINT(args->Center),
                                   args->Radius.x * scale,
                                   args->Radius.y * scale,
                                   args->Color,
                                   args->Rotation,
                                   args->Segments,
-                                  args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+                                  RESIZE_THINKNESS(args->Thinkness));
             break;
         }
         case ElementType::EllipseFilled:
         {
             const EllipseFilledArgs* args = element->GetArgs<EllipseFilledArgs>();
-            draw_list->AddEllipseFilled(offset + args->Center * scale,
+            draw_list->AddEllipseFilled(RESIZE_POINT(args->Center),
                                         args->Radius.x * scale,
                                         args->Radius.y * scale,
                                         args->Color,
@@ -257,23 +259,23 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
         case ElementType::BezierCubic:
         {
             const BezierCubicArgs* args = element->GetArgs<BezierCubicArgs>();
-            draw_list->AddBezierCubic(offset + args->P1 * scale,
-                                      offset + args->P2 * scale,
-                                      offset + args->P3 * scale,
-                                      offset + args->P4 * scale,
+            draw_list->AddBezierCubic(RESIZE_POINT(args->P1),
+                                      RESIZE_POINT(args->P2),
+                                      RESIZE_POINT(args->P3),
+                                      RESIZE_POINT(args->P4),
                                       args->Color,
-                                      args->Thinkness == 0 ? 1 : args->Thinkness * scale,
+                                      RESIZE_THINKNESS(args->Thinkness),
                                       args->Segments);
             break;
         }
         case ElementType::BezierQuadratic:
         {
             const BezierQuadraticArgs* args = element->GetArgs<BezierQuadraticArgs>();
-            draw_list->AddBezierQuadratic(offset + args->P1 * scale,
-                                          offset + args->P2 * scale,
-                                          offset + args->P3 * scale,
+            draw_list->AddBezierQuadratic(RESIZE_POINT(args->P1),
+                                          RESIZE_POINT(args->P2),
+                                          RESIZE_POINT(args->P3),
                                           args->Color,
-                                          args->Thinkness == 0 ? 1 : args->Thinkness * scale,
+                                          RESIZE_THINKNESS(args->Thinkness),
                                           args->Segments);
             break;
         }
@@ -283,11 +285,11 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
             if (PointBuffer.size() < args->Points.size())
                 p->PointBuffer.resize(args->Points.size());
             for (size_t i = 0; i < args->Points.size(); ++i)
-                p->PointBuffer[i] = offset + args->Points[i] * scale;
+                p->PointBuffer[i] = RESIZE_POINT(args->Points[i]);
             draw_list->AddPolyline(PointBuffer.Data, args->Points.size(),
                                    args->Color,
                                    args->Flags,
-                                   args->Thinkness == 0 ? 1 : args->Thinkness * scale);
+                                   RESIZE_THINKNESS(args->Thinkness));
             break;
         }
         case ElementType::PolygonFilled:
@@ -296,7 +298,7 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
             if (PointBuffer.size() < args->Points.size())
                 p->PointBuffer.resize(args->Points.size());
             for (size_t i = 0; i < args->Points.size(); i++)
-                p->PointBuffer[i] = offset + args->Points[i] * scale;
+                p->PointBuffer[i] = RESIZE_POINT(args->Points[i]);
             draw_list->AddConvexPolyFilled(PointBuffer.Data, args->Points.size(), args->Color);
             break;
         }
@@ -311,8 +313,10 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
                 clip_rect.z = offset.x + clip_rect.z * scale;
                 clip_rect.w = offset.y + clip_rect.w * scale;
             }
-            draw_list->AddText(args->Font, args->FontSize * scale,
-                               offset + args->Position * scale, args->Color,
+            draw_list->AddText(args->Font,
+                               args->FontSize * scale,
+                               RESIZE_POINT(args->Position),
+                               args->Color,
                                args->Text.begin(), args->Text.end(),
                                args->WrapWidth * scale,
                                args->UseClip ? &clip_rect : nullptr);
@@ -322,8 +326,8 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
         {
             const TextureArgs* args = element->GetArgs<TextureArgs>();
             draw_list->AddImage(args->Texture,
-                                offset + args->P1 * scale,
-                                offset + args->P2 * scale,
+                                RESIZE_POINT(args->P1),
+                                RESIZE_POINT(args->P2),
                                 args->UV1,
                                 args->UV2,
                                 args->Color);
