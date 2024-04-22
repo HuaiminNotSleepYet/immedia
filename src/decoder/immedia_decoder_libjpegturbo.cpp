@@ -80,6 +80,9 @@ static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 
     DecoderContext* ctx = reinterpret_cast<DecoderContext*>(context);
 
+    if (!ctx->Handle && !ctx->Pixels)
+        return false;
+
     if (ctx->Handle)
     {
         ctx->Pixels = new uint8_t[ctx->Width * ctx->Height * tjPixelSize[decode_pixel_format]];
