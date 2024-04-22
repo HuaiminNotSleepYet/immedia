@@ -8,14 +8,13 @@
 
 namespace ImMedia {
 
-static char* ToLower(const char* s);
 static bool CompareFormat(const char* format_in_lowercase, const char* s);
 static const char* GetFileExtension(const char* filename);
 
 
 struct ImageDecoderInfo
 {
-    char*        Format;
+    const char*  Format;
     ImageDecoder Decoder;
 };
 
@@ -48,8 +47,6 @@ void CreateContext()
 void DestoryContext()
 {
     assert(g_context);
-    for (size_t i = 0; i < g_context->ImageDecoders.size(); ++i)
-        delete(g_context->ImageDecoders[i].Format);
     if (g_context->EmptyImage)
         delete g_context->EmptyImage;
     delete g_context;
@@ -75,7 +72,7 @@ void InstallImageDecoder(const char* format, const ImageDecoder& decoder)
             return;
         }
     }
-    g_context->ImageDecoders.push_back({ ToLower(format), decoder});
+    g_context->ImageDecoders.push_back({ format, decoder });
 }
 
 const ImageDecoder* GetImageDecoder(const char* format)
@@ -356,18 +353,6 @@ const char* GetFileExtension(const char* filename)
     return (p1 == nullptr || *p1 == '\0') ? nullptr : p1;
 }
 
-char* ToLower(const char* s)
-{
-    if (s == nullptr)
-        return nullptr;
-
-    int len = strlen(s);
-    char* ss = new char[len + 1];
-    for (size_t i = 0; i < len; i++)
-        ss[i] = tolower(s[i]);
-    ss[len] = '\0';
-    return ss;
-}
 
 bool CompareFormat(const char* format_in_lowercase, const char* s)
 {

@@ -111,8 +111,16 @@ struct ImageRenderer
 void CreateContext();
 void DestoryContext();
 
+/// @brief Installs decoder for the specified format.
+///        Note: If install for an existing format, the old decoder would be overwritten.
+/// @param format Image format string in lowercase, must keep valid before call @ref DestoryContext.
+/// @param decoder ImageDecoder struct
 void InstallImageDecoder(const char* format, const ImageDecoder& decoder);
-const ImageDecoder*  GetImageDecoder(const char* format);
+
+/// @brief Get decoder for the format.
+/// @param format Image format string, case insensitive.
+/// @return [nullable] null if no corresponding decoder is installed.
+const ImageDecoder* GetImageDecoder(const char* format);
 
 void InstallImageRenderer(const ImageRenderer& renderer);
 const ImageRenderer* GetImageRenderer();
