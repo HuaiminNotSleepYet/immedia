@@ -4,13 +4,14 @@
 
 ImMedia repository contains the following decoders:
 
-|                                                     | support format                    |
-| --------------------------------------------------- | --------------------------------- |
-| [GIFLIB](https://giflib.sourceforge.net/)           | gif                               |
-| [libpng](http://www.libpng.org/pub/png/libpng.html) | png                               |
-| [libwebp](https://github.com/webmproject/libwebp)   | webp                              |
-| [qoi](https://github.com/phoboslab/qoi)             | qoi                               |
-| [stb](https://github.com/nothings/stb)              | bmp, jpg, pic, png, pnm, psd, tga |
+|                                                                 | support format                    |
+| --------------------------------------------------------------- | --------------------------------- |
+| [GIFLIB](https://giflib.sourceforge.net/)                       | gif                               |
+| [libjpeg-turbo](https://github.com/libjpeg-turbo/libjpeg-turbo) | jpeg                              |
+| [libpng](http://www.libpng.org/pub/png/libpng.html)             | png                               |
+| [libwebp](https://github.com/webmproject/libwebp)               | webp                              |
+| [qoi](https://github.com/phoboslab/qoi)                         | qoi                               |
+| [stb](https://github.com/nothings/stb)                          | bmp, jpg, pic, png, pnm, psd, tga |
 
 ## Install your owne decoder
 
