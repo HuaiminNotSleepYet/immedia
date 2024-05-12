@@ -17,7 +17,7 @@ static void* CreateContextFromData(const uint8_t* data, size_t data_size)
     if (data_size > INT_MAX)
         return nullptr;
     qoi_desc desc;
-    uint8_t* pixels = (uint8_t*)qoi_decode(data, data_size, &desc, 0);
+    uint8_t* pixels = (uint8_t*)qoi_decode(data, static_cast<int>(data_size), &desc, 0);
     return pixels ? new QOIDecoderContext{ desc, pixels } : nullptr;
 }
 

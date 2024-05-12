@@ -1,3 +1,8 @@
+#ifdef _MSC_VER
+#pragma warning (disable: 4996) // 'This function or variable may be unsafe'.
+#endif
+
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "immedia_image.h"
 
@@ -63,7 +68,7 @@ void InstallImageDecoder(const char* format, const ImageDecoder& decoder)
     if (format == nullptr || format[0] == '\0')
         return;
 
-    for (size_t i = 0; i < g_context->ImageDecoders.size(); ++i)
+    for (int i = 0; i < g_context->ImageDecoders.size(); ++i)
     {
         ImageDecoderInfo& info = g_context->ImageDecoders[i];
         if (CompareFormat(info.Format, format))
@@ -82,7 +87,7 @@ const ImageDecoder* GetImageDecoder(const char* format)
     if (format == nullptr || format[0] == '\0')
         return nullptr;
 
-    for (size_t i = 0; i < g_context->ImageDecoders.size(); ++i)
+    for (int i = 0; i < g_context->ImageDecoders.size(); ++i)
     {
         ImageDecoderInfo& info = g_context->ImageDecoders[i];
         if (CompareFormat(info.Format, format))
@@ -167,7 +172,7 @@ int Image::GetHeight() const
 
 ImVec2 Image::GetSize() const
 {
-    return ImVec2(Width, Height);
+    return ImVec2((float)Width, (float)Height);
 }
 
 bool Image::HasAnimation() const
@@ -188,7 +193,7 @@ void Image::Play() const
     if (!Decoder || !DecoderContext)
         return;
 
-    const size_t curremt_time = ImGui::GetCurrentContext()->Time * 1000;
+    const size_t curremt_time = static_cast<size_t>(ImGui::GetCurrentContext()->Time * 1000);
     if (curremt_time < NextFrameTime)
         return;
 
@@ -231,18 +236,19 @@ void Image::Show(const ImVec2& size, ImageFillMode fill_mode, const ImVec2& uv0,
         ImGui::Image(GetTexture(), size, uv0, uv1, tint_col, border_col);
     else if (fill_mode == ImMedia::ImageFillMode::Fill)
     {
-        int p0_x = uv0.x * Width;
-        int p0_y = uv0.y * Height;
-        int p1_x = uv1.x * Width;
-        int p1_y = uv1.y * Height;
+        // We use int to avoid floating-point rounding errors.
+        int p0_x = (int)(uv0.x * Width);
+        int p0_y = (int)(uv0.y * Height);
+        int p1_x = (int)(uv1.x * Width);
+        int p1_y = (int)(uv1.y * Height);
 
         int w = p1_x - p0_x;
         int h = p1_y - p0_y;
 
         // I couldn't have found a better name.
         double r = fmax(size.x / w, size.y / h);
-        int s_w = size.x / r;
-        int s_h = size.y / r;
+        int s_w = (int)(size.x / r);
+        int s_h = (int)(size.y / r);
 
         int p3_x = 0;
         int p3_y = 0;
@@ -262,8 +268,8 @@ void Image::Show(const ImVec2& size, ImageFillMode fill_mode, const ImVec2& uv0,
         p4_x += p0_x;
         p4_y += p0_y;
 
-        ImVec2 p0 = ImVec2(p3_x, p3_y) / ImVec2(Width, Height);
-        ImVec2 p1 = ImVec2(p4_x, p4_y) / ImVec2(Width, Height);
+        ImVec2 p0 = ImVec2((float)p3_x, (float)p3_y) / ImVec2((float)Width, (float)Height);
+        ImVec2 p1 = ImVec2((float)p4_x, (float)p4_y) / ImVec2((float)Width, (float)Height);
 
         ImGui::Image(GetTexture(), size, p0, p1, tint_col, border_col);
     }
@@ -280,11 +286,11 @@ void Image::Show(const ImVec2& size, ImageFillMode fill_mode, const ImVec2& uv0,
         if (!ImGui::ItemAdd(bb, 0))
             return;
 
-        int w = Width * (uv1.x - uv0.x);
-        int h = Height* (uv1.y - uv0.y);
+        int w = (int)(Width  * (uv1.x - uv0.x));
+        int h = (int)(Height * (uv1.y - uv0.y));
         double r = fmin(size.x / w, size.y / h);
-        w *= r;
-        h *= r;
+        w = (int)(r * w);
+        h = (int)(r * h);
         ImVec2 offset((size.x - w) / 2, (size.y - h) / 2);
 
         if (border_size > 0.0f)
@@ -356,11 +362,11 @@ const char* GetFileExtension(const char* filename)
 
 bool CompareFormat(const char* format_in_lowercase, const char* s)
 {
-    int len = strlen(format_in_lowercase);
+    size_t len = strlen(format_in_lowercase);
     if (len != strlen(s))
         return false;
 
-    for (size_t i = 0; i < len; i++)
+    for (int i = 0; i < len; i++)
     {
         if (format_in_lowercase[i] != tolower(s[i]))
             return false;

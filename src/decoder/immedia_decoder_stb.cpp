@@ -1,8 +1,8 @@
 #include "immedia_decoder_stb.h"
 
 #ifdef _MSC_VER
-#pragma warning(disable:6262)
-#pragma warning(disable:26451)
+#pragma warning (disable: 6262)  // Function uses constant_1 bytes of stack: exceeds /analyze:stacksize constant_2. Consider moving some data to heap
+#pragma warning (disable: 26451) // Arithmetic overflow: Using operator 'operator' on a size-a byte value and then casting the result to a size-b byte value. Cast the value to the wider type before calling operator 'operator' to avoid overflow (io.2)
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -23,11 +23,11 @@ struct DecoderContext
 
 static void* CreateContextFromData(const uint8_t* data, size_t data_size)
 {
-    if (data_size > INT_MAX) 
+    if (data_size > INT_MAX)
         return nullptr;
 
     int width, height, channels;
-    uint8_t* pixels = stbi_load_from_memory(data, data_size, &width, &height, &channels, STBI_default);
+    uint8_t* pixels = stbi_load_from_memory(data, static_cast<int>(data_size), &width, &height, &channels, STBI_default);
     if (!pixels)
         return nullptr;
 

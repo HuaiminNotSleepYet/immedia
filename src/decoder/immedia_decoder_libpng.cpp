@@ -1,5 +1,9 @@
 #include "immedia_decoder_libpng.h"
 
+#ifdef _MSC_VER
+#pragma warning (disable: 4611) // Interaction between '_setjmp' and C++ object destruction is non-portable.
+#endif
+
 #include "png.h"
 
 #include "immedia_image.h"
@@ -57,6 +61,8 @@ static void PNGRead(png_struct* png, png_info* info, uint8_t*& pixels, uint8_t**
 
 static void* CreateContextFromFile(void* fp, size_t data_size)
 {
+    IM_UNUSED(data_size);
+
     uint8_t header[8];
     FILE* f = reinterpret_cast<FILE*>(fp);
     fread(header, 1, PNG_HEADER_SIZE, f);

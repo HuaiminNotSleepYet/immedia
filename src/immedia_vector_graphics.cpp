@@ -93,7 +93,7 @@ void VectorGraphics::AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, floa
 { ADD_ELEMENT(ElementType::Line, LineArgs) { p1, p2, col, thickness }; }
 
 void VectorGraphics::AddRect(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness, float rounding, ImDrawFlags flags)
-{ ADD_ELEMENT(ElementType::Rect, RectArgs) { p1, p2, col, thickness }; }
+{ ADD_ELEMENT(ElementType::Rect, RectArgs) { p1, p2, col, thickness, rounding, flags }; }
 
 void VectorGraphics::AddRectFilled(const ImVec2& p1, const ImVec2& p2, ImU32 col, float rounding, ImDrawFlags flags)
 { ADD_ELEMENT(ElementType::RectFilled, RectFilledArgs) { p1, p2, col, rounding, flags }; }
@@ -140,9 +140,9 @@ void VectorGraphics::AddText(const ImVec2& pos, ImU32 col, const char* text_begi
 void VectorGraphics::AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end, float wrap_width, const ImVec4* cpu_fine_clip_rect)
 {
     TextArgs* args = new TextArgs{ pos, col, {}, font, font_size, wrap_width, {}, cpu_fine_clip_rect != nullptr };
-    size_t text_len = text_end
+    int text_len = (int)(text_end
         ? text_end - text_begin
-        : strlen(text_begin);
+        : strlen(text_begin));
     args->Text.resize(text_len);
     memcpy(args->Text.Data, text_begin, text_len);
     if (cpu_fine_clip_rect)
@@ -178,7 +178,7 @@ void VectorGraphics::Show(const ImVec2& size) const
 void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2& p2) const
 {
     const ImVec2 size = p2 - p1;
-    const double scale = fmin(size.x / Size.x, size.y / Size.y);
+    const float  scale = (float)fmin(size.x / Size.x, size.y / Size.y);
     const ImVec2 offset = ImVec2((size.x - Size.x * scale) / 2, (size.y - Size.y * scale) / 2) + p1;
     RESIZE_ARGS(offset, scale);
 
@@ -289,7 +289,7 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
             const PolylineArgs* args = element->GetArgs<PolylineArgs>();
             if (PointBuffer.size() < args->Points.size())
                 p->PointBuffer.resize(args->Points.size());
-            for (size_t i = 0; i < args->Points.size(); ++i)
+            for (int i = 0; i < args->Points.size(); ++i)
                 p->PointBuffer[i] = RESIZE_POINT(args->Points[i]);
             draw_list->AddPolyline(PointBuffer.Data, args->Points.size(),
                                    args->Color,
@@ -302,7 +302,7 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
             const PolygonFilledArgs* args = element->GetArgs<PolygonFilledArgs>();
             if (PointBuffer.size() < args->Points.size())
                 p->PointBuffer.resize(args->Points.size());
-            for (size_t i = 0; i < args->Points.size(); i++)
+            for (int i = 0; i < args->Points.size(); i++)
                 p->PointBuffer[i] = RESIZE_POINT(args->Points[i]);
             draw_list->AddConvexPolyFilled(PointBuffer.Data, args->Points.size(), args->Color);
             break;
@@ -378,7 +378,7 @@ void ShowVGInfoWindow(const char* name, const VectorGraphics& vg, bool* p_open)
     const ImVec2 item_min = ImGui::GetItemRectMin();
     const ImVec2 item_max = ImGui::GetItemRectMax();
     const ImVec2 item_size = item_max - item_min;
-    const double scale = fmin(item_size.x / vg.GetWidth(), item_size.y / vg.GetHeight());
+    const float  scale = (float)fmin(item_size.x / vg.GetWidth(), item_size.y / vg.GetHeight());
     const ImVec2 item_offset = ImVec2((item_size.x - vg.GetWidth() * scale) / 2, (item_size.y - vg.GetHeight() * scale) / 2) + item_min;
     RESIZE_ARGS(item_offset, scale);
 
@@ -510,7 +510,7 @@ void ShowVGInfoWindow(const char* name, const VectorGraphics& vg, bool* p_open)
             case VectorGraphics::ElementType::Polyline:
             {
                 const VectorGraphics::PolylineArgs* args = element->GetArgs<VectorGraphics::PolylineArgs>();
-                for (size_t i = 0; i < args->Points.size(); ++i)
+                for (int i = 0; i < args->Points.size(); ++i)
                     p->PointBuffer[i] = RESIZE_POINT(args->Points[i]);
                 draw_list->AddPolyline(vg.PointBuffer.Data, args->Points.size(),
                                        highlight_color,
@@ -521,7 +521,7 @@ void ShowVGInfoWindow(const char* name, const VectorGraphics& vg, bool* p_open)
             case VectorGraphics::ElementType::PolygonFilled:
             {
                 const VectorGraphics::PolygonFilledArgs* args = element->GetArgs<VectorGraphics::PolygonFilledArgs>();
-                for (size_t i = 0; i < args->Points.size(); i++)
+                for (int i = 0; i < args->Points.size(); i++)
                     p->PointBuffer[i] = RESIZE_POINT(args->Points[i]);
                 draw_list->AddConvexPolyFilled(vg.PointBuffer.Data, args->Points.size(), highlight_color);
                 break;
