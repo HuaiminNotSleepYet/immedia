@@ -45,6 +45,8 @@ enum class PixelFormat : int
 #define PIXEL_FORMAT_SIZE(PIXEL_FORMAT)      (int)PIXEL_FORMAT & 0x0FF
 #define PIXEL_FORMAT_HAS_ALPHA(PIXEL_FORMAT) (int)PIXEL_FORMAT & 0x100
 
+#ifndef IMMEDIA_NO_IMAGE_DECODER
+
 struct ImageDecoder
 {
     /// @brief Create context from filename. This func can be set to null, immedia would switch to @ref CreateContextFromData.
@@ -83,6 +85,8 @@ struct ImageDecoder
     void (*EndReadFrame)(void* context);
 };
 
+#endif // !IMMEDIA_NO_IMAGE_DECODER
+
 struct ImageRenderer
 {
     /// @brief Create context with the given format.
@@ -111,6 +115,8 @@ struct ImageRenderer
 void CreateContext();
 void DestoryContext();
 
+#ifndef IMMEDIA_NO_IMAGE_DECODER
+
 /// @brief Installs decoder for the specified format.
 ///        Note: If install for an existing format, the old decoder would be overwritten.
 /// @param format Image format string in lowercase, must keep valid before call @ref DestoryContext.
@@ -121,6 +127,8 @@ void InstallImageDecoder(const char* format, const ImageDecoder& decoder);
 /// @param format Image format string, case insensitive.
 /// @return [nullable] null if no corresponding decoder is installed.
 const ImageDecoder* GetImageDecoder(const char* format);
+
+#endif // !IMMEDIA_NO_IMAGE_DECODER
 
 void InstallImageRenderer(const ImageRenderer& renderer);
 const ImageRenderer* GetImageRenderer();
@@ -135,12 +143,16 @@ enum class ImageFillMode
 class Image
 {
 public:
+#ifndef IMMEDIA_NO_IMAGE_DECODER
     Image(const char* filename, const char* format = nullptr) noexcept;
     Image(const char* filename, const ImageDecoder* decoder) noexcept;
     Image(const uint8_t* data, size_t data_size, const char* format) noexcept;
     Image(const uint8_t* data, size_t data_size, const ImageDecoder* decoder) noexcept;
-    Image(int width, int height, PixelFormat format, const uint8_t* pixels) noexcept;
     Image(void* decoder_context, const ImageDecoder* decoder) noexcept;
+#endif // !IMMEDIA_NO_IMAGE_DECODER
+
+    Image(int width, int height, PixelFormat format, const uint8_t* pixels) noexcept;
+
     ~Image();
 
     Image(const Image&) = delete;
@@ -171,19 +183,21 @@ public:
               const ImVec4& border_col = ImVec4(0, 0, 0, 0)) const;
 
 private:
-    int                 Width   = 0;
-    int                 Height  = 0;
-    bool                HasAnim = false;
+    int    Width   = 0;
+    int    Height  = 0;
 
-    size_t              NextFrameTime = 0;
+    void*  RendererContext = nullptr;
 
+#ifndef IMMEDIA_NO_IMAGE_DECODER
     void*               DecoderContext  = nullptr;
     const ImageDecoder* Decoder         = nullptr;
-    void*               RendererContext = nullptr;
+    bool                HasAnim         = false;
+    size_t              NextFrameTime   = 0;
 
     void Load(const char* filename, const ImageDecoder* decoder);
     void Load(const uint8_t* data, size_t data_size, const ImageDecoder* decoder);
     void Load(void* decoder_context, const ImageDecoder* decoder);
+#endif // !IMMEDIA_NO_IMAGE_DECODER
 };
 
 }

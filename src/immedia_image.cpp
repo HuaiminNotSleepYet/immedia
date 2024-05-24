@@ -16,6 +16,7 @@ namespace ImMedia {
 static bool CompareFormat(const char* format_in_lowercase, const char* s);
 static const char* GetFileExtension(const char* filename);
 
+#ifndef IMMEDIA_NO_IMAGE_DECODER
 
 struct ImageDecoderInfo
 {
@@ -23,16 +24,23 @@ struct ImageDecoderInfo
     ImageDecoder Decoder;
 };
 
+#endif // !IMMEDIA_NO_IMAGE_DECODER
+
 struct ImMediaContext
 {
+#ifndef IMMEDIA_NO_IMAGE_DECODER
     ImVector<ImageDecoderInfo> ImageDecoders;
+#endif
+
     ImageRenderer              ImageRenderer;
     bool                       InstallImageRenderer;
 
     Image*                     EmptyImage;
 
     ImMediaContext() :
+#ifndef IMMEDIA_NO_IMAGE_DECODER
         ImageRenderer({ nullptr, nullptr,nullptr,nullptr }),
+#endif // !IMMEDIA_NO_IMAGE_DECODER
         InstallImageRenderer(false),
         EmptyImage(nullptr)
     {
@@ -56,6 +64,8 @@ void DestoryContext()
         delete g_context->EmptyImage;
     delete g_context;
 }
+
+#ifndef IMMEDIA_NO_IMAGE_DECODER
 
 void InstallImageDecoder(const char* format, const ImageDecoder& decoder)
 {
@@ -96,6 +106,8 @@ const ImageDecoder* GetImageDecoder(const char* format)
     return nullptr;
 }
 
+#endif // !IMMEDIA_NO_IMAGE_DECODER
+
 void InstallImageRenderer(const ImageRenderer& renderer)
 {
     assert(g_context);
@@ -117,6 +129,7 @@ const ImageRenderer* GetImageRenderer()
     return &g_context->ImageRenderer;
 }
 
+#ifndef IMMEDIA_NO_IMAGE_DECODER
 
 Image::Image(const char* filename, const char* format) noexcept
 {
@@ -138,6 +151,13 @@ Image::Image(const uint8_t* data, size_t data_size, const ImageDecoder* decoder)
     Load(data, data_size, decoder);
 }
 
+Image::Image(void* decoder_context, const ImageDecoder* decoder) noexcept
+{
+    Load(decoder_context, decoder);
+}
+
+#endif // !IMMEDIA_NO_IMAGE_DECODER
+
 Image::Image(int width, int height, PixelFormat format, const uint8_t* pixels) noexcept
 {
     Width = width;
@@ -147,15 +167,12 @@ Image::Image(int width, int height, PixelFormat format, const uint8_t* pixels) n
     renderer->WriteFrame(RendererContext, pixels);
 }
 
-Image::Image(void* decoder_context, const ImageDecoder* decoder) noexcept
-{
-    Load(decoder_context, decoder);
-}
-
 Image::~Image()
 {
+#ifndef IMMEDIA_NO_IMAGE_DECODER
     if (DecoderContext)
         Decoder->DeleteContext(DecoderContext);
+#endif
     if (RendererContext)
         GetImageRenderer()->DeleteContext(RendererContext);
 }
@@ -177,7 +194,11 @@ ImVec2 Image::GetSize() const
 
 bool Image::HasAnimation() const
 {
+#ifdef IMMEDIA_NO_IMAGE_DECODER
+    return false;
+#else
     return HasAnim;
+#endif
 }
 
 ImTextureID Image::GetTexture() const
@@ -190,6 +211,8 @@ ImTextureID Image::GetTexture() const
 
 void Image::Play() const
 {
+#ifndef IMMEDIA_NO_IMAGE_DECODER
+
     if (!Decoder || !DecoderContext)
         return;
 
@@ -220,6 +243,7 @@ void Image::Play() const
         p->Decoder = nullptr;
         p->DecoderContext = nullptr;
     }
+#endif // !IMMEDIA_NO_IMAGE_DECODER
 }
 
 void Image::Show(const ImVec2& size, ImageFillMode fill_mode, const ImVec2& uv0, const ImVec2& uv1, const ImVec4& tint_col, const ImVec4& border_col) const
@@ -299,6 +323,8 @@ void Image::Show(const ImVec2& size, ImageFillMode fill_mode, const ImVec2& uv0,
     }
 }
 
+#ifndef IMMEDIA_NO_IMAGE_DECODER
+
 void Image::Load(const char* filename, const ImageDecoder* decoder)
 {
     if (!filename || !decoder)
@@ -345,6 +371,7 @@ void Image::Load(void* decoder_context, const ImageDecoder* decoder)
     Play();
 }
 
+#endif // !IMMEDIA_NO_IMAGE_DECODER
 
 const char* GetFileExtension(const char* filename)
 {
