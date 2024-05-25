@@ -6,4 +6,4 @@
 
 void ImMedia_DecoderQOI_Install();
 
-#endif // IMMEDIA_DECODER_QOI_H
+#endif // !IMMEDIA_DECODER_QOI_H

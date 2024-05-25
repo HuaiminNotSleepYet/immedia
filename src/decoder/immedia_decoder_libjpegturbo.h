@@ -6,4 +6,4 @@
 
 void ImMedia_DecoderLibjpegTurbo_Install();
 
-#endif // IMMEDIA_DECODER_LIBJPEGTURBO_H
+#endif // !IMMEDIA_DECODER_LIBJPEGTURBO_H

@@ -33,6 +33,8 @@ namespace ImMedia {
 void CreateContext();
 void DestoryContext();
 
+
+
 // The structure of pixelformat:
 // | 0   -   15 | 16    | 17  -  32 |
 // | pixel size | alpha | format id |
@@ -50,6 +52,8 @@ enum class PixelFormat : int
 
 #define PIXEL_FORMAT_SIZE(PIXEL_FORMAT)      ((int)PIXEL_FORMAT & 0x0FF)
 #define PIXEL_FORMAT_HAS_ALPHA(PIXEL_FORMAT) ((int)PIXEL_FORMAT & 0x100)
+
+
 
 #ifndef IMMEDIA_NO_IMAGE_DECODER
 
@@ -91,7 +95,20 @@ struct ImageDecoder
     void (*EndReadFrame)(void* context);
 };
 
+/// @brief Installs decoder for the specified format.
+///        Note: If install for an existing format, the old decoder would be overwritten.
+/// @param format Image format string in lowercase, must keep valid before call @ref DestoryContext.
+/// @param decoder ImageDecoder struct.
+void InstallImageDecoder(const char* format, const ImageDecoder& decoder);
+
+/// @brief Get decoder for the format.
+/// @param format Image format string, case insensitive.
+/// @return [nullable] null if no corresponding decoder is installed.
+const ImageDecoder* GetImageDecoder(const char* format);
+
 #endif // !IMMEDIA_NO_IMAGE_DECODER
+
+
 
 struct ImageRenderer
 {
@@ -118,23 +135,10 @@ struct ImageRenderer
     ImTextureID (*GetTexture)(void* context);
 };
 
-#ifndef IMMEDIA_NO_IMAGE_DECODER
-
-/// @brief Installs decoder for the specified format.
-///        Note: If install for an existing format, the old decoder would be overwritten.
-/// @param format Image format string in lowercase, must keep valid before call @ref DestoryContext.
-/// @param decoder ImageDecoder struct.
-void InstallImageDecoder(const char* format, const ImageDecoder& decoder);
-
-/// @brief Get decoder for the format.
-/// @param format Image format string, case insensitive.
-/// @return [nullable] null if no corresponding decoder is installed.
-const ImageDecoder* GetImageDecoder(const char* format);
-
-#endif // !IMMEDIA_NO_IMAGE_DECODER
-
 void InstallImageRenderer(const ImageRenderer& renderer);
 const ImageRenderer* GetImageRenderer();
+
+
 
 enum class ImageFillMode
 {
@@ -142,6 +146,7 @@ enum class ImageFillMode
     Center,
     Fill
 };
+
 
 class Image
 {
@@ -205,4 +210,4 @@ private:
 
 }
 
-#endif // IMMEDIA_IMAGE_H
+#endif // !IMMEDIA_IMAGE_H

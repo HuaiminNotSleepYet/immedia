@@ -6,4 +6,4 @@
 
 void ImMedia_DecoderGiflib_Install();
 
-#endif // IMMEDIA_DECODER_GIFLIB_H
+#endif // !IMMEDIA_DECODER_GIFLIB_H

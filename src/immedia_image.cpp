@@ -16,6 +16,8 @@ namespace ImMedia {
 static bool CompareFormat(const char* format_in_lowercase, const char* s);
 static const char* GetFileExtension(const char* filename);
 
+
+
 #ifndef IMMEDIA_NO_IMAGE_DECODER
 
 struct ImageDecoderInfo
@@ -25,6 +27,7 @@ struct ImageDecoderInfo
 };
 
 #endif // !IMMEDIA_NO_IMAGE_DECODER
+
 
 struct ImMediaContext
 {
@@ -109,6 +112,7 @@ const ImageDecoder* GetImageDecoder(const char* format)
         if (CompareFormat(info.Format, format))
             return info.Decoder;
     }
+
     return nullptr;
 }
 
@@ -136,6 +140,8 @@ const ImageRenderer* GetImageRenderer()
 }
 
 #ifndef IMMEDIA_NO_IMAGE_DECODER
+
+
 
 Image::Image(const char* filename, const char* format) noexcept
 {
@@ -249,6 +255,7 @@ void Image::Play() const
         p->Decoder = nullptr;
         p->DecoderContext = nullptr;
     }
+
 #endif // !IMMEDIA_NO_IMAGE_DECODER
 }
 

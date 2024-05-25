@@ -6,4 +6,4 @@
 
 void ImMedia_DecoderLibpng_Install();
 
-#endif // IMMEDIA_DECODER_LIBPNG_H
+#endif // !IMMEDIA_DECODER_LIBPNG_H

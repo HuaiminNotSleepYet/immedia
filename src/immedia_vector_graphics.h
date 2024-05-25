@@ -108,4 +108,4 @@ void ShowVGInfoWindow(const char* name, const VectorGraphics& vg, bool* p_open =
 
 }
 
-#endif // IMMEDIA_VECTOR_GRAPHICS_H
+#endif // !IMMEDIA_VECTOR_GRAPHICS_H

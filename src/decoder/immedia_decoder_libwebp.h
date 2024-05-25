@@ -6,4 +6,4 @@
 
 void ImMedia_DecoderLibwebp_Install();
 
-#endif // IMMEDIA_DECODER_LIBWEBP_H
+#endif // !IMMEDIA_DECODER_LIBWEBP_H

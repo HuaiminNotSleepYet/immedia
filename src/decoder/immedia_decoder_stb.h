@@ -18,4 +18,4 @@ enum class DecoderSTBFormat
 
 void ImMedia_DecoderSTB_Install(DecoderSTBFormat format);
 
-#endif // IMMEDIA_DECODER_STB_H
+#endif // !IMMEDIA_DECODER_STB_H
