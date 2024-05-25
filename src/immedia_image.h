@@ -3,6 +3,10 @@
 // Image loading library for imgui (https://github.com/ocornut/imgui).
 //
 //
+// About the pointer:
+//   All pointer parameter and return value should not be nullptr if there is no [nullable] tag.
+// 
+//
 // Note: The lifecycle of ImMedia::Image must be between ImMedia::CreateContext() and ImMedia::DestoryContext().
 //
 //   ImMedia::CreateContext();
@@ -14,9 +18,8 @@
 //   ImMedia::DestoryContext();
 //
 //
-// About the pointer:
-//   If there is no [nullable] tag, all pointer parameter and return value should not be nullptr.
-// 
+//  Define IMMEDIA_NO_IMAGE_DECODER macro to disable decoder feature.
+//
 
 #ifndef IMMEDIA_IMAGE_H
 #define IMMEDIA_IMAGE_H
@@ -26,6 +29,9 @@
 #include "imgui.h"
 
 namespace ImMedia {
+
+void CreateContext();
+void DestoryContext();
 
 // The structure of pixelformat:
 // | 0   -   15 | 16    | 17  -  32 |
@@ -112,15 +118,12 @@ struct ImageRenderer
     ImTextureID (*GetTexture)(void* context);
 };
 
-void CreateContext();
-void DestoryContext();
-
 #ifndef IMMEDIA_NO_IMAGE_DECODER
 
 /// @brief Installs decoder for the specified format.
 ///        Note: If install for an existing format, the old decoder would be overwritten.
 /// @param format Image format string in lowercase, must keep valid before call @ref DestoryContext.
-/// @param decoder ImageDecoder struct
+/// @param decoder ImageDecoder struct.
 void InstallImageDecoder(const char* format, const ImageDecoder& decoder);
 
 /// @brief Get decoder for the format.

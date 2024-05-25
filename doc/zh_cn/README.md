@@ -1,15 +1,25 @@
 # ImMedia
 
-[imgui](https://github.com/ocornut/imgui) 库的图像和矢量图拓展
+- [English](../../README.md)
+- [中文](./README.md)
+
+---
+
+[imgui](https://github.com/ocornut/imgui) 库的图像拓展
 
 ![](../en/img/screenshot.png)
 
 ---
 
-- [English](../../README.md)
-- [中文](./README.md)
+- [功能](#功能)
+  - [位图](#位图)
+  - [矢量图](#矢量图)
+- [安装](#安装)
+  - [vcpkg](#vcpkg)
 
-## 普通图像
+## 功能
+
+### 位图
 
 ```cpp
 #include ...
@@ -53,7 +63,7 @@ ImGui::ImageButton(image.GetTexture(), { 128, 128 });
 
 > 要安装自定义解码器, 请参照 [安装自定义解码器](./Install%20Image%20Decoder.md)
 
-## 矢量图
+### 矢量图
 
 ```cpp
 #include "immedia_vector_graphics.h"
@@ -99,3 +109,9 @@ int main(int argc, char** argv)
 效果
 
 ![](../en/img/vg_steve.png)
+
+## 安装
+
+### vcpkg
+
+从 [release](https://github.com/HuaiminNotSleepYet/immedia/releases) 页面下载 `vcpkg-port.zip`，解压后添加到 vcpkg 的端口覆盖.

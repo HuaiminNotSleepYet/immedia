@@ -1,15 +1,25 @@
 # ImMedia
 
-Image and vector graphics extensions for [imgui](https://github.com/ocornut/imgui).
+- [English](./README.md)
+- [中文](./doc/zh_cn/README.md)
+
+---
+
+Image extensions for [imgui](https://github.com/ocornut/imgui).
 
 ![](./doc/en/img/screenshot.png)
 
 ---
 
-- [English](./README.md)
-- [中文](./doc/zh_cn/README.md)
+- [Features](#features)
+  - [Image](#image)
+  - [Vector graphics](#vector-graphics)
+- [Install](#install)
+  - [vcpkg](#vcpkg)
 
-## Image
+## Features
+
+### Image
 
 ```cpp
 #include ...
@@ -53,7 +63,7 @@ ImGui::ImageButton(image.GetTexture(), { 128, 128 });
 
 > About how to install new decoder, see also [Install Image](./doc/en/Install%20Image%20Decoder.md)
 
-## Vector graphics
+### Vector graphics
 
 ```cpp
 #include "immedia_vector_graphics.h"
@@ -99,3 +109,9 @@ int main(int argc, char** argv)
 Result
 
 ![](./doc/en/img/vg_steve.png)
+
+## Install
+
+### vcpkg
+
+Download `vcpkg-port.zip` from [release](https://github.com/HuaiminNotSleepYet/immedia/releases) page, unzip and add to vcpkg's overlay ports.
