@@ -35,18 +35,10 @@ struct ImMediaContext
     ImVector<ImageDecoderInfo> ImageDecoders;
 #endif
 
-    ImageRenderer              ImageRenderer;
-    bool                       InstallImageRenderer;
+    ImageRenderer* PImageRenderer = nullptr;
+    ImageRenderer  ImageRenderer  = {};
 
-    Image*                     EmptyImage;
-
-    ImMediaContext() :
-        ImageRenderer({ nullptr, nullptr,nullptr,nullptr }),
-        InstallImageRenderer(false),
-        EmptyImage(nullptr)
-    {
-
-    }
+    Image* EmptyImage = nullptr;
 };
 
 static ImMediaContext* g_context = nullptr;
@@ -121,13 +113,14 @@ const ImageDecoder* GetImageDecoder(const char* format)
 void InstallImageRenderer(const ImageRenderer& renderer)
 {
     assert(g_context);
-    assert(g_context->InstallImageRenderer == false);
+    assert(!g_context->PImageRenderer);
     assert(renderer.CreateContext);
     assert(renderer.DeleteContext);
     assert(renderer.GetTexture);
     assert(renderer.WriteFrame);
+
     g_context->ImageRenderer = renderer;
-    g_context->InstallImageRenderer = true;
+    g_context->PImageRenderer = &g_context->ImageRenderer;
     uint8_t pixels[] = { 0x00, 0x00, 0x00, 0x00 };
     g_context->EmptyImage = new Image(1, 1, PixelFormat::RGBA8888, pixels);
 }
@@ -135,8 +128,7 @@ void InstallImageRenderer(const ImageRenderer& renderer)
 const ImageRenderer* GetImageRenderer()
 { 
     assert(g_context);
-    assert(g_context->InstallImageRenderer);
-    return &g_context->ImageRenderer;
+    return g_context->PImageRenderer;
 }
 
 #ifndef IMMEDIA_NO_IMAGE_DECODER
@@ -372,8 +364,11 @@ void Image::Load(const uint8_t* data, size_t data_size, const ImageDecoder* deco
 
 void Image::Load(void* decoder_context, const ImageDecoder* decoder)
 {
+    assert(GetImageRenderer());
+
     if (!decoder_context || !decoder)
         return;
+
     PixelFormat format;
     int         framt_count;
     decoder->GetInfo(decoder_context, &Width, &Height, &format, &framt_count);
@@ -381,10 +376,13 @@ void Image::Load(void* decoder_context, const ImageDecoder* decoder)
     Decoder          = decoder;
     DecoderContext  = decoder_context;
     RendererContext = GetImageRenderer()->CreateContext(Width, Height, format, HasAnim);
+
     Play();
 }
 
 #endif // !IMMEDIA_NO_IMAGE_DECODER
+
+
 
 const char* GetFileExtension(const char* filename)
 {
@@ -398,7 +396,6 @@ const char* GetFileExtension(const char* filename)
     }
     return (p1 == nullptr || *p1 == '\0') ? nullptr : p1;
 }
-
 
 bool CompareFormat(const char* format_in_lowercase, const char* s)
 {
