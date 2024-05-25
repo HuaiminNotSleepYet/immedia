@@ -14,9 +14,7 @@ struct LibpngDecoderContext
 {
     png_struct* PNG;
     png_info*   Info;
-
     uint8_t*    Pixels;
-    uint8_t*    Buffer;
 };
 
 static void PNGClean(png_struct* png, png_info* info, uint8_t* pixels, uint8_t** rows)
