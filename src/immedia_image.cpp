@@ -20,8 +20,8 @@ static const char* GetFileExtension(const char* filename);
 
 struct ImageDecoderInfo
 {
-    const char*  Format;
-    ImageDecoder Decoder;
+    const char*         Format;
+    const ImageDecoder* Decoder;
 };
 
 #endif // !IMMEDIA_NO_IMAGE_DECODER
@@ -38,9 +38,7 @@ struct ImMediaContext
     Image*                     EmptyImage;
 
     ImMediaContext() :
-#ifndef IMMEDIA_NO_IMAGE_DECODER
         ImageRenderer({ nullptr, nullptr,nullptr,nullptr }),
-#endif // !IMMEDIA_NO_IMAGE_DECODER
         InstallImageRenderer(false),
         EmptyImage(nullptr)
     {
@@ -60,8 +58,15 @@ void CreateContext()
 void DestoryContext()
 {
     assert(g_context);
+
+#ifndef IMMEDIA_NO_IMAGE_DECODER
+    for (int i = 0; i < g_context->ImageDecoders.size(); ++i)
+        delete g_context->ImageDecoders[i].Decoder;
+#endif
+
     if (g_context->EmptyImage)
         delete g_context->EmptyImage;
+
     delete g_context;
 }
 
@@ -83,11 +88,12 @@ void InstallImageDecoder(const char* format, const ImageDecoder& decoder)
         ImageDecoderInfo& info = g_context->ImageDecoders[i];
         if (CompareFormat(info.Format, format))
         {
-            info.Decoder = decoder;
+            delete info.Decoder;
+            info.Decoder = new ImageDecoder(decoder);
             return;
         }
     }
-    g_context->ImageDecoders.push_back({ format, decoder });
+    g_context->ImageDecoders.push_back({ format, new ImageDecoder(decoder) });
 }
 
 const ImageDecoder* GetImageDecoder(const char* format)
@@ -101,7 +107,7 @@ const ImageDecoder* GetImageDecoder(const char* format)
     {
         ImageDecoderInfo& info = g_context->ImageDecoders[i];
         if (CompareFormat(info.Format, format))
-            return &info.Decoder;
+            return info.Decoder;
     }
     return nullptr;
 }
