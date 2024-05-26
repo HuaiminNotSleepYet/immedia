@@ -1,3 +1,8 @@
+// Vector graphics extension for imgui 1.90.6 (https://github.com/ocornut/imgui).
+// 
+// This implementation is very rough and may change significantly in the future.
+//  
+
 #ifndef IMMEDIA_VECTOR_GRAPHICS_H
 #define IMMEDIA_VECTOR_GRAPHICS_H
 

@@ -1,8 +1,5 @@
-// immedia_image.h
-//
-// Image loading library for imgui (https://github.com/ocornut/imgui).
-//
-//
+// Image extension for imgui 1.90.6 (https://github.com/ocornut/imgui).
+// 
 // About the pointer:
 //   All pointer parameter and return value should not be nullptr if there is no [nullable] tag.
 // 

@@ -242,8 +242,7 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
         {
             const EllipseArgs* args = element->GetArgs<EllipseArgs>();
             draw_list->AddEllipse(RESIZE_POINT(args->Center),
-                                  args->Radius.x * scale,
-                                  args->Radius.y * scale,
+                                  args->Radius * scale,
                                   args->Color,
                                   args->Rotation,
                                   args->Segments,
@@ -254,8 +253,7 @@ void VectorGraphics::Draw(ImDrawList* draw_list, const ImVec2& p1, const ImVec2&
         {
             const EllipseFilledArgs* args = element->GetArgs<EllipseFilledArgs>();
             draw_list->AddEllipseFilled(RESIZE_POINT(args->Center),
-                                        args->Radius.x * scale,
-                                        args->Radius.y * scale,
+                                        args->Radius * scale,
                                         args->Color,
                                         args->Rotation,
                                         args->Segments);
@@ -465,8 +463,7 @@ void ShowVGInfoWindow(const char* name, const VectorGraphics& vg, bool* p_open)
             {
                 const VectorGraphics::EllipseArgs* args = element->GetArgs<VectorGraphics::EllipseArgs>();
                 draw_list->AddEllipse(RESIZE_POINT(args->Center),
-                                      args->Radius.x * scale,
-                                      args->Radius.y * scale,
+                                      args->Radius * scale,
                                       highlight_color,
                                       args->Rotation,
                                       args->Segments,
@@ -477,8 +474,7 @@ void ShowVGInfoWindow(const char* name, const VectorGraphics& vg, bool* p_open)
             {
                 const VectorGraphics::EllipseFilledArgs* args = element->GetArgs<VectorGraphics::EllipseFilledArgs>();
                 draw_list->AddEllipseFilled(RESIZE_POINT(args->Center),
-                                            args->Radius.x * scale,
-                                            args->Radius.y * scale,
+                                            args->Radius * scale,
                                             highlight_color,
                                             args->Rotation,
                                             args->Segments);
