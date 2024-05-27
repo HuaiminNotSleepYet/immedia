@@ -6,22 +6,25 @@
 
 #include "immedia_image.h"
 
-struct WebpDecoderContext
+struct Context
 {
-    WebPData                WebpData;
-    WebPDecoderConfig       DecoderConfig;
+    WebPData          WebpData;
+    WebPDecoderConfig DecoderConfig;
 
     WebPAnimDecoderOptions* AnimDecoderOptions;
     WebPAnimDecoder*        AnimDecoder;
-    int                     PreviousTimeStamp;
+
+    uint8_t* FramePixels;
+    int      FrameDelay;
+    int      PreviousTimeStamp;
 };
 
-static WebpDecoderContext* CreateContext(const WebPData& webp_data)
+static Context* CreateContext(const WebPData& webp_data)
 {
     if (WebPGetInfo(webp_data.bytes, webp_data.size, nullptr, nullptr) == false)
         return nullptr;
 
-    WebpDecoderContext* ctx = new WebpDecoderContext();
+    Context* ctx = new Context();
     ctx->WebpData = webp_data;
     WebPInitDecoderConfig(&ctx->DecoderConfig);
     WebPGetFeatures(webp_data.bytes, webp_data.size, &ctx->DecoderConfig.input);
@@ -40,6 +43,9 @@ static WebpDecoderContext* CreateContext(const WebPData& webp_data)
         WebPAnimDecoderOptionsInit(ctx->AnimDecoderOptions);
         ctx->AnimDecoder = WebPAnimDecoderNew(&ctx->WebpData, ctx->AnimDecoderOptions);
     }
+
+    ctx->FramePixels = nullptr;
+    ctx->FrameDelay = 0;
     ctx->PreviousTimeStamp = 0;
 
     return ctx;
@@ -51,7 +57,7 @@ static void* CreateContextFromFile(void* fp, size_t file_size)
     uint8_t* buffer = (uint8_t*)WebPMalloc(file_size);
     fread(buffer, 1, file_size, f);
     fclose(f);
-    WebpDecoderContext* ctx = CreateContext({ buffer, file_size });
+    Context* ctx = CreateContext({ buffer, file_size });
     if (ctx)
         return ctx;
     WebPFree(buffer);
@@ -72,7 +78,7 @@ static void* CreateContextFromData(const uint8_t* data, size_t data_size)
 
 static void DeleteContext(void* context)
 {
-    WebpDecoderContext* ctx = reinterpret_cast<WebpDecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
     WebPFreeDecBuffer(&ctx->DecoderConfig.output);
     WebPDataClear(&ctx->WebpData);
     if (ctx->AnimDecoderOptions)
@@ -85,7 +91,7 @@ static void DeleteContext(void* context)
 
 static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat* format, int* frame_count)
 {
-    WebpDecoderContext* ctx = reinterpret_cast<WebpDecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
     const WebPBitstreamFeatures& feature = ctx->DecoderConfig.input;
     if (width)
         *width = feature.width;
@@ -106,9 +112,12 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
     }
 }
 
-static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
+static bool ReadNextFrame(void* context);
+
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
-    WebpDecoderContext* ctx = reinterpret_cast<WebpDecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
+
     if (!ctx->DecoderConfig.input.has_animation)
     {
         if (!ctx->DecoderConfig.output.u.RGBA.rgba)
@@ -121,27 +130,35 @@ static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
     }
     else
     {
-        if (WebPAnimDecoderHasMoreFrames(ctx->AnimDecoder) == false)
-        {
-            WebPAnimDecoderReset(ctx->AnimDecoder);
-            ctx->PreviousTimeStamp = 0;
-        }
-        uint8_t* frame;
-        int timestamp;
-        if (!WebPAnimDecoderGetNext(ctx->AnimDecoder, &frame, &timestamp))
-            return false;
-        *pixels = frame;
-        *delay_in_ms = timestamp - ctx->PreviousTimeStamp;
-        ctx->PreviousTimeStamp = timestamp;
+        if (!ctx->FramePixels)
+            ReadNextFrame(ctx);
+
+        *pixels = ctx->FramePixels;
+        *delay_in_ms = ctx->FrameDelay;
     }
+
     return true;
 }
 
-static void EndReadFrame(void* context)
+static bool ReadNextFrame(void* context)
 {
-    WebpDecoderContext* ctx = reinterpret_cast<WebpDecoderContext*>(context);
-    if (!ctx->DecoderConfig.input.has_alpha && ctx->DecoderConfig.output.u.RGBA.rgba)
-        WebPFreeDecBuffer(&ctx->DecoderConfig.output);
+    Context* ctx = reinterpret_cast<Context*>(context);
+    
+    if (!ctx->DecoderConfig.input.has_animation)
+        return false;
+
+    if (WebPAnimDecoderHasMoreFrames(ctx->AnimDecoder) == false)
+    {
+        WebPAnimDecoderReset(ctx->AnimDecoder);
+        ctx->PreviousTimeStamp = 0;
+    }
+
+    int timestamp;
+    WebPAnimDecoderGetNext(ctx->AnimDecoder, &ctx->FramePixels, &timestamp);
+    ctx->FrameDelay = timestamp - ctx->PreviousTimeStamp;
+    ctx->PreviousTimeStamp = timestamp;
+
+    return true;
 }
 
 void ImMedia_DecoderLibwebp_Install()
@@ -151,7 +168,7 @@ void ImMedia_DecoderLibwebp_Install()
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        BeginReadFrame,
-        EndReadFrame
+        ReadFrame,
+        ReadNextFrame
     });
 }

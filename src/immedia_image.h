@@ -56,7 +56,8 @@ enum class PixelFormat : int
 
 struct ImageDecoder
 {
-    /// @brief Create context from filename. This func can be set to null, immedia would switch to @ref CreateContextFromData.
+    /// @brief Create context from filename.
+    ///        It can be set to null, immedia would switch to @ref CreateContextFromData.
     /// @param f FILE* of a valid file, open with mode "rb" and seek to start. Decoder is responsible to call fclose if success.
     /// @param file_size File size.
     /// @return [nullable] null if can't parsered from file.
@@ -80,16 +81,18 @@ struct ImageDecoder
     /// @param[out] frame_count [nullable] 0 if the image doesn't contain animation.
     void (*GetInfo)(void* context, int* width, int* height, PixelFormat* format, int* frame_count);
 
-    /// @brief Start read one frame from decoder context.
+    /// @brief Read current frame from decoder context.
     /// @param context Decoder context.
-    /// @param[out] pixels A pointer to frame pixels, valid until call @ref EndReadFrame.
-    /// @param[out] delay 0 if the image dosen't contain animation or the animation has finished playing.
-    /// @return true if success. Call @ref EndReadFrame after if success.
-    bool (*BeginReadFrame)(void* context, uint8_t** pixels, int* delay_in_ms);
+    /// @param[out] pixels A pointer to frame pixels, valid until call @ref ReadNext.
+    /// @param[out] delay 0 if the image dosen't contain animation or is the last frame.
+    /// @return true if success.
+    bool (*ReadFrame)(void* context, uint8_t** pixels, int* delay_in_ms);
 
-    /// @brief End read frame, can be set to null. Call it after @ref BeginReadFrame return true.
+    /// @brief Read next frame from decoder context.
+    ///        It can be set to null if the decoder doesn't support animation.
     /// @param context Decoder context.
-    void (*EndReadFrame)(void* context);
+    /// @return true if has next frame.
+    bool (*ReadNextFrame)(void* context);
 };
 
 /// @brief Installs decoder for the specified format.

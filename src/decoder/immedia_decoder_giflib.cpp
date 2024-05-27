@@ -7,16 +7,17 @@
 
 #include "immedia_image.h"
 
-struct GiflibDecoderContext
+struct Context
 {
     GifFileType* Gif;
     bool         HasAlpha;
 
-    uint8_t*     FrameBuffer;
-    int          CurrentFrame;
+    uint8_t*     FramePixels;
+    int          FrameDelay;
+    int          FrameIndex;
 };
 
-static GiflibDecoderContext* GifRead(GifFileType* gif)
+static Context* GifRead(GifFileType* gif)
 {
     if (!gif)
         return nullptr;
@@ -26,7 +27,7 @@ static GiflibDecoderContext* GifRead(GifFileType* gif)
         return nullptr;
     }
 
-    GiflibDecoderContext* ctx = new GiflibDecoderContext();
+    Context* ctx = new Context();
     ctx->Gif = gif;
 
     for (size_t i = 0; i < gif->ImageCount && ctx->HasAlpha == false; i++)
@@ -42,14 +43,13 @@ static GiflibDecoderContext* GifRead(GifFileType* gif)
             }
         }
     }
-    size_t frame_size = (size_t)gif->SWidth * gif->SHeight * (ctx->HasAlpha ? 4 : 3);
-    ctx->FrameBuffer = new uint8_t[frame_size];
-    memset(ctx->FrameBuffer, 0, frame_size);
-    ctx->CurrentFrame = 0;
+    ctx->FramePixels = nullptr;
+    ctx->FrameIndex = 0;
+    ctx->FrameDelay = 0;
     return ctx;
 }
 
-static int GifFileInputFunc(GifFileType* gif, GifByteType* buf, int len)
+static int GifFileReadFunc(GifFileType* gif, GifByteType* buf, int len)
 {
     FILE* f = reinterpret_cast<FILE*>(gif->UserData);
     int l = static_cast<int>(fread(buf, 1, len, f));
@@ -65,13 +65,13 @@ static void* CreateContextFromFile(void* f, size_t file_size)
 {
     if (file_size > INT_MAX)
         return nullptr;
-    GiflibDecoderContext* ctx = GifRead(DGifOpen(f, GifFileInputFunc, nullptr));
+    Context* ctx = GifRead(DGifOpen(f, GifFileReadFunc, nullptr));
     if (ctx->Gif->UserData)
         fclose(reinterpret_cast<FILE*>(f));
     return ctx;
 }
 
-static int GifInputFunc(GifFileType* gif, GifByteType* buf, int len)
+static int GifDataReadFunc(GifFileType* gif, GifByteType* buf, int len)
 {
     const uint8_t** d = reinterpret_cast<const uint8_t**>(gif->UserData);
     int l = (d[0] + len >= d[1])
@@ -85,20 +85,21 @@ static int GifInputFunc(GifFileType* gif, GifByteType* buf, int len)
 static void* CreateContextFromData(const uint8_t* data, size_t data_size)
 {
     const uint8_t** d = new const uint8_t* [2] { data, data + data_size };
-    return GifRead(DGifOpen(d, GifInputFunc, nullptr));
+    return GifRead(DGifOpen(d, GifDataReadFunc, nullptr));
 }
 
 static void DeleteContext(void* context)
 {
-    GiflibDecoderContext* ctx = reinterpret_cast<GiflibDecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
     DGifCloseFile(ctx->Gif, nullptr);
-    delete[] ctx->FrameBuffer;
+    if (ctx->FramePixels)
+        delete[] ctx->FramePixels;
     delete ctx;
 }
 
 static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat* format, int* frame_count)
 {
-    GiflibDecoderContext* ctx = reinterpret_cast<GiflibDecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
     if (width)
         *width = ctx->Gif->SWidth;
     if (height)
@@ -109,14 +110,40 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
         *frame_count = ctx->Gif->ImageCount == 1 ? 0 : ctx->Gif->ImageCount;
 }
 
-static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
+static bool ReadNextFrame(void* context);
+
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
-    GiflibDecoderContext* ctx = reinterpret_cast<GiflibDecoderContext*>(context);
-    
-    const SavedImage&    frame = ctx->Gif->SavedImages[ctx->CurrentFrame];
+    Context* ctx = reinterpret_cast<Context*>(context);
+
+    if (!ctx->FramePixels)
+        ReadNextFrame(ctx);
+
+    *pixels      = ctx->FramePixels;
+    *delay_in_ms = ctx->FrameDelay;
+
+    return true;
+}
+
+static bool ReadNextFrame(void* context)
+{
+    Context* ctx = reinterpret_cast<Context*>(context);
+
+    if (!ctx->FramePixels)
+    {
+        size_t frame_size = (size_t)ctx->Gif->SWidth * ctx->Gif->SHeight * (ctx->HasAlpha ? 4 : 3);
+        ctx->FramePixels = new uint8_t[frame_size];
+        memset(ctx->FramePixels, 0, frame_size);
+    }
+    else if (ctx->Gif->ImageCount == 1)
+    {
+        return false;
+    }
+
+    const SavedImage&    frame = ctx->Gif->SavedImages[ctx->FrameIndex];
     GraphicsControlBlock graphic_block;
 
-    DGifSavedExtensionToGCB(ctx->Gif, ctx->CurrentFrame, &graphic_block);
+    DGifSavedExtensionToGCB(ctx->Gif, ctx->FrameIndex, &graphic_block);
 
     for (size_t y = 0; y < frame.ImageDesc.Height; ++y)
     {
@@ -125,7 +152,7 @@ static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
             const ColorMapObject* color_map = frame.ImageDesc.ColorMap ? frame.ImageDesc.ColorMap : ctx->Gif->SColorMap;
             uint8_t color_index = frame.RasterBits[x + y * frame.ImageDesc.Width];
 
-            uint8_t* pixel = ctx->FrameBuffer + ((y + frame.ImageDesc.Top) * ctx->Gif->SWidth + (x + frame.ImageDesc.Left))  * (ctx->HasAlpha ? 4 : 3);
+            uint8_t* pixel = ctx->FramePixels + ((y + frame.ImageDesc.Top) * ctx->Gif->SWidth + (x + frame.ImageDesc.Left))  * (ctx->HasAlpha ? 4 : 3);
 
             if (!ctx->HasAlpha)
             {
@@ -142,11 +169,8 @@ static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
             }
         }
     }
-
-    *pixels = ctx->FrameBuffer;
-    *delay_in_ms = graphic_block.DelayTime * 10;
-
-    ctx->CurrentFrame = (ctx->CurrentFrame + 1) % ctx->Gif->ImageCount;
+    ctx->FrameDelay = graphic_block.DelayTime * 10;
+    ctx->FrameIndex = (ctx->FrameIndex + 1) % ctx->Gif->ImageCount;
 
     return true;
 }
@@ -158,7 +182,7 @@ void ImMedia_DecoderGiflib_Install()
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        BeginReadFrame,
-        nullptr
+        ReadFrame,
+        ReadNextFrame
     });
 }

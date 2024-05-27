@@ -73,7 +73,7 @@ void InstallImageDecoder(const char* format, const ImageDecoder& decoder)
     assert(decoder.CreateContextFromData);
     assert(decoder.DeleteContext);
     assert(decoder.GetInfo);
-    assert(decoder.BeginReadFrame);
+    assert(decoder.ReadFrame);
 
     if (format == nullptr || format[0] == '\0')
         return;
@@ -227,13 +227,14 @@ void Image::Play() const
     Image* p = const_cast<Image*>(this);
     uint8_t* pixels;
     int      delay;
-    if (Decoder->BeginReadFrame(DecoderContext, &pixels, &delay))
+    if (Decoder->ReadFrame(DecoderContext, &pixels, &delay))
     {
         GetImageRenderer()->WriteFrame(RendererContext, pixels);
-        if (Decoder->EndReadFrame)
-            Decoder->EndReadFrame(DecoderContext);
+        bool has_next_frame = false;
+        if (Decoder->ReadNextFrame)
+            has_next_frame = Decoder->ReadNextFrame(DecoderContext);
         p->NextFrameTime = curremt_time + delay;
-        if (delay == 0)
+        if (!has_next_frame)
         {
             p->NextFrameTime = SIZE_MAX;
             Decoder->DeleteContext(DecoderContext);
@@ -373,7 +374,7 @@ void Image::Load(void* decoder_context, const ImageDecoder* decoder)
     int         framt_count;
     decoder->GetInfo(decoder_context, &Width, &Height, &format, &framt_count);
     HasAnim = framt_count > 0;
-    Decoder          = decoder;
+    Decoder         = decoder;
     DecoderContext  = decoder_context;
     RendererContext = GetImageRenderer()->CreateContext(Width, Height, format, HasAnim);
 

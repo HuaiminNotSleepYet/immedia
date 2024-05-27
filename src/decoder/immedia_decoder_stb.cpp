@@ -63,7 +63,7 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
     if (frame_count) *frame_count = 0;
 }
 
-static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
     DecoderContext* ctx = reinterpret_cast<DecoderContext*>(context);
     *pixels = ctx->Pixels;
@@ -73,12 +73,12 @@ static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 
 void ImMedia_DecoderSTB_Install(DecoderSTBFormat format)
 {
-    const static ImMedia::ImageDecoder decoder = {
+    const ImMedia::ImageDecoder decoder = {
         nullptr,
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        BeginReadFrame,
+        ReadFrame,
         nullptr
     };
 

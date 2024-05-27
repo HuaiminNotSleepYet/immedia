@@ -10,11 +10,11 @@
 
 #define PNG_HEADER_SIZE 8
 
-struct LibpngDecoderContext
+struct Context
 {
     png_struct* PNG;
     png_info*   Info;
-    uint8_t*    Pixels;
+    uint8_t*    FramePixels;
 };
 
 static void PNGClean(png_struct* png, png_info* info, uint8_t* pixels, uint8_t** rows)
@@ -83,7 +83,7 @@ static void* CreateContextFromFile(void* fp, size_t data_size)
     png_set_sig_bytes(png, PNG_HEADER_SIZE);
     PNGRead(png, info, pixels, rows);
     fclose(f);
-    return new LibpngDecoderContext{ png, info, pixels };
+    return new Context{ png, info, pixels };
 }
 
 struct PNGIO
@@ -124,20 +124,20 @@ static void* CreateContextFromData(const uint8_t* data, size_t data_size)
     png_set_sig_bytes(png, PNG_HEADER_SIZE);
     png_set_read_fn(png, &png_io, PNGDataReadFunc);
     PNGRead(png, info, pixels, rows);
-    return new LibpngDecoderContext{ png, info, pixels };
+    return new Context{ png, info, pixels };
 }
 
 static void DeleteContext(void* context)
 {
-    LibpngDecoderContext* ctx = reinterpret_cast<LibpngDecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
     png_destroy_read_struct(&ctx->PNG, &ctx->Info, nullptr);
-    delete[] ctx->Pixels;
+    delete[] ctx->FramePixels;
     delete ctx;
 }
 
 static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat* format, int* frame_count)
 {
-    LibpngDecoderContext* ctx = reinterpret_cast<LibpngDecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
     *width = png_get_image_width(ctx->PNG, ctx->Info);
     *height = png_get_image_height(ctx->PNG, ctx->Info);
     png_byte color_type = png_get_color_type(ctx->PNG, ctx->Info);
@@ -150,10 +150,10 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
     *frame_count = 0;
 }
 
-static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
-    LibpngDecoderContext* ctx = reinterpret_cast<LibpngDecoderContext*>(context);
-    *pixels = ctx->Pixels;
+    Context* ctx = reinterpret_cast<Context*>(context);
+    *pixels = ctx->FramePixels;
     *delay_in_ms = 0;
     return true;
 }
@@ -165,7 +165,7 @@ void ImMedia_DecoderLibpng_Install()
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        BeginReadFrame,
+        ReadFrame,
         nullptr
     });
 }

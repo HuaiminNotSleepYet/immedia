@@ -41,7 +41,7 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
         *frame_count = 0;
 }
 
-static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
     QOIDecoderContext* ctx = reinterpret_cast<QOIDecoderContext*>(context);
     *pixels = ctx->Pixels;
@@ -56,7 +56,7 @@ void ImMedia_DecoderQOI_Install()
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        BeginReadFrame,
+        ReadFrame,
         nullptr
     });
 }

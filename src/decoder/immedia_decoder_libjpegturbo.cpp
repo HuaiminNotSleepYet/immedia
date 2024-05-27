@@ -74,22 +74,22 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
     if (frame_count) *frame_count = 0;
 }
 
-static bool BeginReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
-    const static int decode_pixel_format = TJPF_RGB;
+#define DECODE_PIXEL_FORMAT TJPF_RGB
 
     DecoderContext* ctx = reinterpret_cast<DecoderContext*>(context);
 
     if (!ctx->Handle && !ctx->Pixels)
         return false;
 
-    if (ctx->Handle)
+    if (!ctx->Pixels)
     {
-        ctx->Pixels = new uint8_t[ctx->Width * ctx->Height * tjPixelSize[decode_pixel_format]];
+        ctx->Pixels = new uint8_t[ctx->Width * ctx->Height * tjPixelSize[DECODE_PIXEL_FORMAT]];
         if (tj3Decompress8(ctx->Handle,
                            ctx->Buffer, ctx->BufferSize,
-                           ctx->Pixels, ctx->Width * tjPixelSize[decode_pixel_format],
-                           decode_pixel_format) == 0)
+                           ctx->Pixels, ctx->Width * tjPixelSize[DECODE_PIXEL_FORMAT],
+                           DECODE_PIXEL_FORMAT) == 0)
         {
             tj3Destroy(ctx->Handle);
             tj3Free(ctx->Buffer);
@@ -120,7 +120,7 @@ void ImMedia_DecoderLibjpegTurbo_Install()
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        BeginReadFrame,
+        ReadFrame,
         nullptr,
     });
     ImMedia::InstallImageDecoder("jpeg", {
@@ -128,7 +128,7 @@ void ImMedia_DecoderLibjpegTurbo_Install()
         CreateContextFromData,
         DeleteContext,
         GetInfo,
-        BeginReadFrame,
+        ReadFrame,
         nullptr,
     });
 }
