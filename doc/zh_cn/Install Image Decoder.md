@@ -26,29 +26,12 @@ struct ImageDecoder
 
     void  (*GetInfo)(void* context, int* width, int* height, PixelFormat* format, int* frame_count);
 
-    bool  (*BeginReadFrame)(void* context, uint8_t** pixels, int* delay);
-    void  (*EndReadFrame)(void* context);
+    bool  (*ReadFrame)(void* context, uint8_t** pixels, int* delay);
+    bool  (*ReadNextFrame)(void* context);
 };
 ```
 
-`CreateContextFromFile`
-- 如果无法解析图片，请返回 `nullptr`
-- 如果成功，由解码器负责调用 fclose
-- 你可以将其设置为 nullptr，ImMedia 会切换到 `CreateContextFromData`
-
-`CreateContextFromData`
-- 如果无法解析图片，请返回 `nullptr`
-
-`GetInfo`
-- 如果图片不含动画，请将 `frame_count` 设置为 `0`
-
-`BeginReadFrame`
-- 如果成功，请返回 true ，在这之后会调用 BeginReadFrame
-- 如果图片不包含动画，或动画已经播放完成，请将 `delay` 设置为 `0`
-
-`BeginReadFrame`
-- 可以设置为空
-- 在 BeginReadFrame 返回 true 后会被调用
+对于每个方法的功能，请参照 [注释](../../src/immedia_image.h)
 
 ---
 
@@ -57,4 +40,3 @@ struct ImageDecoder
 ```cpp
 ImMedia::InstallImageDecoder("format", your_decoder);
 ```
-

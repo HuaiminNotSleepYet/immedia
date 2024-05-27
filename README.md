@@ -65,6 +65,8 @@ ImGui::ImageButton(image.GetTexture(), { 128, 128 });
 
 ### Vector graphics
 
+> Note: The implementation of class `VectorGraphics` is very rough and may change significantly in the future.
+
 ```cpp
 #include "immedia_vector_graphics.h"
 

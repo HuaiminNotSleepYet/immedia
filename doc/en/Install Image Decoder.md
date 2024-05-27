@@ -31,23 +31,7 @@ struct ImageDecoder
 };
 ```
 
-For `CreateContextFromFile`
-- You can set it to nullptr, immedia would switch to `CreateContextFromData`.
-- Return `nullptr` if the data cannot be parsed.
-
-For `CreateContextFromData`
-- Return `nullptr` if the data cannot be parsed.
-
-For `GetInfo`
-- `frame_count` should be set to `0` if the image doesn't contain animation.
-
-For `BeginReadFrame`
-- Return true if sucess, then EndReadFrame would be called.
-- `delay` should be set to `0` if the image dosen't contain animation or the animation has finished playing.
-
-For `EndReadFrame`
-- You can set it to nullptr.
-- It would be called after BeginReadFrame return ture.
+For the functionality of each method, refer to [comments](.../../src/immedia_image.h).
 
 ---
 

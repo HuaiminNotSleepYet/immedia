@@ -65,6 +65,8 @@ ImGui::ImageButton(image.GetTexture(), { 128, 128 });
 
 ### 矢量图
 
+> 注意：`VectorGraphics` 类的实现目前非常粗糙，将来可能有大幅更改
+
 ```cpp
 #include "immedia_vector_graphics.h"
 
