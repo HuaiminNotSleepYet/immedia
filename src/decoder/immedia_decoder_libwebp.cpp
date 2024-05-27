@@ -6,6 +6,29 @@
 
 #include "immedia_image.h"
 
+static void* CreateContextFromFile(void* f, size_t file_size);
+static void* CreateContextFromData(const uint8_t* data, size_t data_size);
+static void DeleteContext(void* context);
+
+static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat* format, int* frame_count);
+
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms);
+static bool ReadNextFrame(void* context);
+
+void ImMedia_DecoderLibwebp_Install()
+{
+    ImMedia::InstallImageDecoder("webp", {
+        CreateContextFromFile,
+        CreateContextFromData,
+        DeleteContext,
+        GetInfo,
+        ReadFrame,
+        ReadNextFrame
+    });
+}
+
+
+
 struct Context
 {
     WebPData          WebpData;
@@ -112,8 +135,6 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
     }
 }
 
-static bool ReadNextFrame(void* context);
-
 static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
     Context* ctx = reinterpret_cast<Context*>(context);
@@ -159,16 +180,4 @@ static bool ReadNextFrame(void* context)
     ctx->PreviousTimeStamp = timestamp;
 
     return true;
-}
-
-void ImMedia_DecoderLibwebp_Install()
-{
-    ImMedia::InstallImageDecoder("webp", {
-        CreateContextFromFile,
-        CreateContextFromData,
-        DeleteContext,
-        GetInfo,
-        ReadFrame,
-        ReadNextFrame
-    });
 }

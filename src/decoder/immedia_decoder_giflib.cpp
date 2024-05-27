@@ -7,6 +7,29 @@
 
 #include "immedia_image.h"
 
+static void* CreateContextFromFile(void* f, size_t file_size);
+static void* CreateContextFromData(const uint8_t* data, size_t data_size);
+static void DeleteContext(void* context);
+
+static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat* format, int* frame_count);
+
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms);
+static bool ReadNextFrame(void* context);
+
+void ImMedia_DecoderGiflib_Install()
+{
+    ImMedia::InstallImageDecoder("gif", {
+        CreateContextFromFile,
+        CreateContextFromData,
+        DeleteContext,
+        GetInfo,
+        ReadFrame,
+        ReadNextFrame
+    });
+}
+
+
+
 struct Context
 {
     GifFileType* Gif;
@@ -17,49 +40,11 @@ struct Context
     int          FrameIndex;
 };
 
-static Context* GifRead(GifFileType* gif)
-{
-    if (!gif)
-        return nullptr;
-    if (DGifSlurp(gif) != GIF_OK)
-    {
-        DGifCloseFile(gif, nullptr);
-        return nullptr;
-    }
 
-    Context* ctx = new Context();
-    ctx->Gif = gif;
+static Context* GifRead(GifFileType* gif);
+static int GifFileReadFunc(GifFileType* gif, GifByteType* buf, int len);
+static int GifDataReadFunc(GifFileType* gif, GifByteType* buf, int len);
 
-    for (size_t i = 0; i < gif->ImageCount && ctx->HasAlpha == false; i++)
-    {
-        const SavedImage& image = gif->SavedImages[i];
-        for (size_t j = 0; j < image.ExtensionBlockCount; j++)
-        {
-            const ExtensionBlock& block = image.ExtensionBlocks[j];
-            if (block.Function == GRAPHICS_EXT_FUNC_CODE)
-            {
-                ctx->HasAlpha = block.Bytes[4] != 0;
-                break;
-            }
-        }
-    }
-    ctx->FramePixels = nullptr;
-    ctx->FrameIndex = 0;
-    ctx->FrameDelay = 0;
-    return ctx;
-}
-
-static int GifFileReadFunc(GifFileType* gif, GifByteType* buf, int len)
-{
-    FILE* f = reinterpret_cast<FILE*>(gif->UserData);
-    int l = static_cast<int>(fread(buf, 1, len, f));
-    if (l < len)
-    {
-        fclose(f);
-        gif->UserData = nullptr;
-    }
-    return l;
-}
 
 static void* CreateContextFromFile(void* f, size_t file_size)
 {
@@ -69,17 +54,6 @@ static void* CreateContextFromFile(void* f, size_t file_size)
     if (ctx->Gif->UserData)
         fclose(reinterpret_cast<FILE*>(f));
     return ctx;
-}
-
-static int GifDataReadFunc(GifFileType* gif, GifByteType* buf, int len)
-{
-    const uint8_t** d = reinterpret_cast<const uint8_t**>(gif->UserData);
-    int l = (d[0] + len >= d[1])
-        ? (int)(d[1] - d[0])
-        : len;
-    memcpy(buf, d[0], l);
-    d[0] += l;
-    return l;
 }
 
 static void* CreateContextFromData(const uint8_t* data, size_t data_size)
@@ -109,8 +83,6 @@ static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat
     if (frame_count)
         *frame_count = ctx->Gif->ImageCount == 1 ? 0 : ctx->Gif->ImageCount;
 }
-
-static bool ReadNextFrame(void* context);
 
 static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
@@ -175,14 +147,58 @@ static bool ReadNextFrame(void* context)
     return true;
 }
 
-void ImMedia_DecoderGiflib_Install()
+
+static Context* GifRead(GifFileType* gif)
 {
-    ImMedia::InstallImageDecoder("gif", {
-        CreateContextFromFile,
-        CreateContextFromData,
-        DeleteContext,
-        GetInfo,
-        ReadFrame,
-        ReadNextFrame
-    });
+    if (!gif)
+        return nullptr;
+    if (DGifSlurp(gif) != GIF_OK)
+    {
+        DGifCloseFile(gif, nullptr);
+        return nullptr;
+    }
+
+    Context* ctx = new Context();
+    ctx->Gif = gif;
+
+    for (size_t i = 0; i < gif->ImageCount && ctx->HasAlpha == false; i++)
+    {
+        const SavedImage& image = gif->SavedImages[i];
+        for (size_t j = 0; j < image.ExtensionBlockCount; j++)
+        {
+            const ExtensionBlock& block = image.ExtensionBlocks[j];
+            if (block.Function == GRAPHICS_EXT_FUNC_CODE)
+            {
+                ctx->HasAlpha = block.Bytes[4] != 0;
+                break;
+            }
+        }
+    }
+    ctx->FramePixels = nullptr;
+    ctx->FrameIndex = 0;
+    ctx->FrameDelay = 0;
+    return ctx;
+}
+
+static int GifFileReadFunc(GifFileType* gif, GifByteType* buf, int len)
+{
+    FILE* f = reinterpret_cast<FILE*>(gif->UserData);
+    int l = static_cast<int>(fread(buf, 1, len, f));
+    if (l < len)
+    {
+        fclose(f);
+        gif->UserData = nullptr;
+    }
+    return l;
+}
+
+static int GifDataReadFunc(GifFileType* gif, GifByteType* buf, int len)
+{
+    const uint8_t** d = reinterpret_cast<const uint8_t**>(gif->UserData);
+    int l = (d[0] + len >= d[1])
+        ? (int)(d[1] - d[0])
+        : len;
+    memcpy(buf, d[0], l);
+    d[0] += l;
+    return l;
 }

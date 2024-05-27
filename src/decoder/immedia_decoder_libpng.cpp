@@ -10,6 +10,28 @@
 
 #define PNG_HEADER_SIZE 8
 
+static void* CreateContextFromFile(void* f, size_t file_size);
+static void* CreateContextFromData(const uint8_t* data, size_t data_size);
+static void DeleteContext(void* context);
+
+static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat* format, int* frame_count);
+
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms);
+
+void ImMedia_DecoderLibpng_Install()
+{
+    ImMedia::InstallImageDecoder("png", {
+        CreateContextFromFile,
+        CreateContextFromData,
+        DeleteContext,
+        GetInfo,
+        ReadFrame,
+        nullptr
+    });
+}
+
+
+
 struct Context
 {
     png_struct* PNG;
@@ -17,45 +39,18 @@ struct Context
     uint8_t*    FramePixels;
 };
 
-static void PNGClean(png_struct* png, png_info* info, uint8_t* pixels, uint8_t** rows)
+static void PNGRead(png_struct* png, png_info* info, uint8_t*& pixels, uint8_t**& rows);
+static void PNGClean(png_struct* png, png_info* info, uint8_t* pixels, uint8_t** rows);
+
+struct PNGDataReadIO
 {
-    png_destroy_read_struct(&png, &info, nullptr);
-    if (pixels)
-        delete[] pixels;
-    if (rows)
-        delete[] rows;
-}
+    const uint8_t* Data;
+    size_t         DataSize;
+    size_t         CurrentPos;
+};
 
-static void PNGRead(png_struct* png, png_info* info, uint8_t*& pixels, uint8_t**& rows)
-{
-    png_read_info(png, info);
+static void PNGDataReadFunc(png_structp png, png_bytep png_data, png_size_t length);
 
-    png_uint_32 width      = png_get_image_width(png, info);
-    png_uint_32 height     = png_get_image_height(png, info);
-    png_byte    color_type = png_get_color_type(png, info);
-
-    if (color_type == PNG_COLOR_TYPE_PALETTE)
-        png_set_palette_to_rgb(png);
-    else if (color_type == PNG_COLOR_TYPE_GRAY)
-    {
-        png_set_gray_to_rgb(png);
-        png_set_expand_gray_1_2_4_to_8(png);
-    }
-
-    if (png_get_valid(png, info, PNG_INFO_tRNS))
-        png_set_tRNS_to_alpha(png);
-
-    const bool has_alpha = color_type & PNG_COLOR_MASK_ALPHA;
-
-    size_t row_size = (size_t)width * (has_alpha ? 4 : 3);
-    size_t image_size = row_size * height;
-    pixels = new uint8_t[image_size];
-    rows = new uint8_t* [height];
-    for (size_t i = 0; i < height; ++i)
-        rows[i] = pixels + i * row_size;
-    png_read_image(png, rows);
-    delete[] rows;
-}
 
 static void* CreateContextFromFile(void* fp, size_t data_size)
 {
@@ -86,21 +81,6 @@ static void* CreateContextFromFile(void* fp, size_t data_size)
     return new Context{ png, info, pixels };
 }
 
-struct PNGIO
-{
-    const uint8_t* Data;
-    size_t         DataSize;
-    size_t         CurrentPos;
-};
-
-static void PNGDataReadFunc(png_structp png, png_bytep png_data, png_size_t length)
-{
-    PNGIO* png_io = reinterpret_cast<PNGIO*>(png_get_io_ptr(png));
-    const uint8_t* data = png_io->Data;
-    memcpy(png_data, data + png_io->CurrentPos, length);
-    png_io->CurrentPos += length;
-}
-
 static void* CreateContextFromData(const uint8_t* data, size_t data_size)
 {
     if (data_size <= PNG_HEADER_SIZE)
@@ -120,7 +100,7 @@ static void* CreateContextFromData(const uint8_t* data, size_t data_size)
         return nullptr;
     }
 
-    PNGIO png_io = { data + PNG_HEADER_SIZE, data_size - PNG_HEADER_SIZE, 0 };
+    PNGDataReadIO png_io = { data + PNG_HEADER_SIZE, data_size - PNG_HEADER_SIZE, 0 };
     png_set_sig_bytes(png, PNG_HEADER_SIZE);
     png_set_read_fn(png, &png_io, PNGDataReadFunc);
     PNGRead(png, info, pixels, rows);
@@ -158,14 +138,51 @@ static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
     return true;
 }
 
-void ImMedia_DecoderLibpng_Install()
+
+static void PNGRead(png_struct* png, png_info* info, uint8_t*& pixels, uint8_t**& rows)
 {
-    ImMedia::InstallImageDecoder("png", {
-        CreateContextFromFile,
-        CreateContextFromData,
-        DeleteContext,
-        GetInfo,
-        ReadFrame,
-        nullptr
-    });
+    png_read_info(png, info);
+
+    png_uint_32 width      = png_get_image_width(png, info);
+    png_uint_32 height     = png_get_image_height(png, info);
+    png_byte    color_type = png_get_color_type(png, info);
+
+    if (color_type == PNG_COLOR_TYPE_PALETTE)
+        png_set_palette_to_rgb(png);
+    else if (color_type == PNG_COLOR_TYPE_GRAY)
+    {
+        png_set_gray_to_rgb(png);
+        png_set_expand_gray_1_2_4_to_8(png);
+    }
+
+    if (png_get_valid(png, info, PNG_INFO_tRNS))
+        png_set_tRNS_to_alpha(png);
+
+    const bool has_alpha = color_type & PNG_COLOR_MASK_ALPHA;
+
+    size_t row_size = (size_t)width * (has_alpha ? 4 : 3);
+    size_t image_size = row_size * height;
+    pixels = new uint8_t[image_size];
+    rows = new uint8_t* [height];
+    for (size_t i = 0; i < height; ++i)
+        rows[i] = pixels + i * row_size;
+    png_read_image(png, rows);
+    delete[] rows;
+}
+
+static void PNGClean(png_struct* png, png_info* info, uint8_t* pixels, uint8_t** rows)
+{
+    png_destroy_read_struct(&png, &info, nullptr);
+    if (pixels)
+        delete[] pixels;
+    if (rows)
+        delete[] rows;
+}
+
+static void PNGDataReadFunc(png_structp png, png_bytep png_data, png_size_t length)
+{
+    PNGDataReadIO* png_io = reinterpret_cast<PNGDataReadIO*>(png_get_io_ptr(png));
+    const uint8_t* data = png_io->Data;
+    memcpy(png_data, data + png_io->CurrentPos, length);
+    png_io->CurrentPos += length;
 }

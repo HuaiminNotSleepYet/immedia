@@ -6,7 +6,37 @@
 
 #include "immedia_image.h"
 
-struct DecoderContext
+static void* CreateContextFromFile(void* f, size_t file_size);
+static void* CreateContextFromData(const uint8_t* data, size_t data_size);
+static void DeleteContext(void* context);
+
+static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat* format, int* frame_count);
+
+static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms);
+
+void ImMedia_DecoderLibjpegTurbo_Install()
+{
+    ImMedia::InstallImageDecoder("jpg", {
+        CreateContextFromFile,
+        CreateContextFromData,
+        DeleteContext,
+        GetInfo,
+        ReadFrame,
+        nullptr,
+    });
+    ImMedia::InstallImageDecoder("jpeg", {
+        CreateContextFromFile,
+        CreateContextFromData,
+        DeleteContext,
+        GetInfo,
+        ReadFrame,
+        nullptr,
+    });
+}
+
+
+
+struct Context
 {
     int      Width;
     int      Height;
@@ -18,7 +48,7 @@ struct DecoderContext
     uint8_t* Pixels;
 };
 
-static DecoderContext* CreateContext(uint8_t* jpeg_buffer, size_t buffer_size)
+static Context* CreateContext(uint8_t* jpeg_buffer, size_t buffer_size)
 {
     tjhandle handle = tj3Init(TJINIT_DECOMPRESS);
 
@@ -29,7 +59,7 @@ static DecoderContext* CreateContext(uint8_t* jpeg_buffer, size_t buffer_size)
         return nullptr;
     }
 
-    return new DecoderContext {
+    return new Context {
         tj3Get(handle, TJPARAM_JPEGWIDTH),
         tj3Get(handle, TJPARAM_JPEGHEIGHT),
         handle,
@@ -59,7 +89,7 @@ static void* CreateContextFromData(const uint8_t* data, size_t data_size)
 
 static void DeleteContext(void* context)
 {
-    DecoderContext* ctx = reinterpret_cast<DecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
     if (ctx->Handle) tj3Destroy(ctx->Handle);
     if (ctx->Buffer) tj3Free(ctx->Buffer);
     if (ctx->Pixels) delete[] ctx->Pixels;
@@ -67,7 +97,7 @@ static void DeleteContext(void* context)
 
 static void GetInfo(void* context, int* width, int* height, ImMedia::PixelFormat* format, int* frame_count)
 {
-    DecoderContext* ctx = reinterpret_cast<DecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
     if (width) *width = ctx->Width;
     if (height) *height = ctx->Height;
     if (format) *format = ImMedia::PixelFormat::RGB888;
@@ -78,7 +108,7 @@ static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
 {
 #define DECODE_PIXEL_FORMAT TJPF_RGB
 
-    DecoderContext* ctx = reinterpret_cast<DecoderContext*>(context);
+    Context* ctx = reinterpret_cast<Context*>(context);
 
     if (!ctx->Handle && !ctx->Pixels)
         return false;
@@ -111,24 +141,4 @@ static bool ReadFrame(void* context, uint8_t** pixels, int* delay_in_ms)
     *pixels = ctx->Pixels;
     *delay_in_ms = 0;
     return true;
-}
-
-void ImMedia_DecoderLibjpegTurbo_Install()
-{
-    ImMedia::InstallImageDecoder("jpg", {
-        CreateContextFromFile,
-        CreateContextFromData,
-        DeleteContext,
-        GetInfo,
-        ReadFrame,
-        nullptr,
-    });
-    ImMedia::InstallImageDecoder("jpeg", {
-        CreateContextFromFile,
-        CreateContextFromData,
-        DeleteContext,
-        GetInfo,
-        ReadFrame,
-        nullptr,
-    });
 }
